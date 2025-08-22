@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", // JS version output
+    "module": "commonjs", // module system
+    "lib": ["ES2022"], // available JS libraries
+    "rootDir": "./src", // source folder
+    "outDir": "./dist", // compiled output
+    "strict": true, // enable all strict checks
+    "esModuleInterop": true, // allow default import of CommonJS modules
+    "skipLibCheck": true, // skip type checking of declaration files
+    "forceConsistentCasingInFileNames": true, // file name consistency
+    "resolveJsonModule": true, // import JSON files
+    "declaration": true, // generate .d.ts files
+    "declarationMap": true, // map declarations to source
+    "sourceMap": true, // generate source maps
+    "removeComments": true, // remove comments in output
+    "noImplicitAny": true, // catch implicit any types
+    "noImplicitReturns": true, // check missing return statements
+    "noImplicitThis": true, // catch unsafe this usage
+    "noUnusedLocals": false, // allow unused local variables
+    "noUnusedParameters": false, // allow unused parameters
+    "exactOptionalPropertyTypes": true, // strict optional property types
+    "noImplicitOverride": true, // enforce override keyword
+    "noPropertyAccessFromIndexSignature": true, // safer index access
+    "noUncheckedIndexedAccess": true, // safer array/object access
+    "allowUnusedLabels": false, // disallow unused labels
+    "allowUnreachableCode": false, // disallow unreachable code
+    "experimentalDecorators": true, // enable decorators
+    "emitDecoratorMetadata": true, // emit decorator metadata
+    "baseUrl": "./src", // base for paths
+    "paths": {
+      "@/*": ["*"],
+      "@/config/*": ["config/*"],
+      "@/controllers/*": ["controllers/*"],
+      "@/middleware/*": ["middleware/*"],
+      "@/models/*": ["models/*"],
+      "@/routes/*": ["routes/*"],
+      "@/services/*": ["services/*"],
+      "@/types/*": ["types/*"],
+      "@/utils/*": ["utils/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+}

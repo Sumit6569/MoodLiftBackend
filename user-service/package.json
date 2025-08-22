@@ -1,0 +1,25 @@
+{
+  "name": "user-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "start": "ts-node src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2",
+    "nodemon": "^3.0.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.873.0",
+    "express": "^5.1.0"
+  }
+}

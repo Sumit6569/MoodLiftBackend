@@ -1,0 +1,68 @@
+
+version: "3.9"
+services:
+  dynamodb:
+    build: ./db/dynamodb-local
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "3001:3001"
+    environment:
+      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+    depends_on:
+      - dynamodb
+
+  session-service:
+    build: ./session-service
+    container_name: session-service
+    ports:
+      - "3002:3002"
+    environment:
+      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+    depends_on:
+      - dynamodb
+
+  chat-service:
+    build: ./chat-service
+    container_name: chat-service
+    ports:
+      - "3003:3003"
+    environment:
+      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+    depends_on:
+      - dynamodb
+
+  payment-service:
+    build: ./payment-service
+    container_name: payment-service
+    ports:
+      - "3004:3004"
+    environment:
+      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+    depends_on:
+      - dynamodb
+
+  ai-service:
+    build: ./ai-service
+    container_name: ai-service
+    ports:
+      - "3005:3005"
+    environment:
+      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+    depends_on:
+      - dynamodb
+
+  feedback-service:
+    build: ./feedback-service
+    container_name: feedback-service
+    ports:
+      - "3006:3006"
+    environment:
+      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+    depends_on:
+      - dynamodb
