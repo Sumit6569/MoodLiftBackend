@@ -5,10 +5,11 @@ import morgan from "morgan";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 
-import userRoute from "./routes/user.route";
-import { errorHandler } from './middleware/errorHandler';
-import { notFoundHandler } from './middleware/notFoundHandler';
+import userRoute from "./routes/user.route.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import { notFoundHandler } from "./middleware/notFoundHandler.js";
 
 // Load environment variables
 dotenv.config();
@@ -33,7 +34,7 @@ app.use(
         ? ["https://your-frontend-domain.com"]
         : ["http://localhost:3000"],
     credentials: true,
-  }),
+  })
 );
 app.use(compression());
 app.use(morgan("combined"));
@@ -51,17 +52,31 @@ app.get("/api/health", (_req, res) => {
 });
 
 // API routes
-app.use("/api/v1/user", userRoute);
+app.use("/api/v1/users", userRoute);
 
 // Error handling middleware
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 User Service running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env["NODE_ENV"] || "development"}`);
-  console.log(`🔗 API URL: http://localhost:${PORT}/api`);
-});
+const MONGODB_URI =
+  process.env["MONGODB_URI"] || "mongodb://127.0.0.1:27017/moodlift";
+
+mongoose
+  .connect(MONGODB_URI, { dbName: process.env["MONGODB_DB"] || undefined })
+  .then(() => {
+    console.log("✅ Connected to MongoDB");
+    app.listen(PORT, () => {
+      console.log(`🚀 User Service running on port ${PORT}`);
+      console.log(
+        `📊 Environment: ${process.env["NODE_ENV"] || "development"}`
+      );
+      console.log(`🔗 API URL: http://localhost:${PORT}/api`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err.message);
+    process.exit(1);
+  });
 
 export default app;

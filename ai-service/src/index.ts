@@ -18,22 +18,22 @@ const PORT = process.env['BACKEND_PORT'] || 3005;
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
 });
 
 // Middleware
 app.use(limiter);
 app.use(helmet());
 app.use(
-  cors({
-    origin:
-      process.env['NODE_ENV'] === 'production'
-        ? ['https://your-frontend-domain.com']
-        : ['http://localhost:3000'],
-    credentials: true,
-  })
+    cors({
+        origin:
+            process.env['NODE_ENV'] === 'production'
+                ? ['https://your-frontend-domain.com']
+                : ['http://localhost:3000'],
+        credentials: true,
+    })
 );
 app.use(compression());
 app.use(morgan('combined'));
@@ -41,12 +41,13 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/api/health', (_req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env['NODE_ENV'],
-  });
+    res.status(200).json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env['NODE_ENV'],
+        msg: "test watch function"
+    });
 });
 
 // API routes
@@ -58,9 +59,9 @@ app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 AI Service running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env['NODE_ENV'] || 'development'}`);
-  console.log(`🔗 API URL: http://localhost:${PORT}/api`);
+    console.log(`🚀 AI Service running on port ${PORT}`);
+    console.log(`📊 Environment: ${process.env['NODE_ENV'] || 'development'}`);
+    console.log(`🔗 API URL: http://localhost:${PORT}/api`);
 });
 
 export default app;
