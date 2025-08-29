@@ -1,11 +1,5 @@
 version: "3.9"
 services:
-  dynamodb:
-    image: amazon/dynamodb-local
-    container_name: dynamodb-local
-    ports:
-      - "8000:8000"
-
   mongo:
     image: mongo:7
     container_name: mongo
@@ -30,9 +24,9 @@ services:
     ports:
       - "3002:3002"
     environment:
-      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+      MONGODB_URI: "mongodb://mongo:27017/moodlift"
     depends_on:
-      - dynamodb
+      - mongo
 
   chat-service:
     build: ./chat-service
@@ -40,9 +34,9 @@ services:
     ports:
       - "3003:3003"
     environment:
-      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+      MONGODB_URI: "mongodb://mongo:27017/moodlift"
     depends_on:
-      - dynamodb
+      - mongo
 
   payment-service:
     build: ./payment-service
@@ -50,9 +44,9 @@ services:
     ports:
       - "3004:3004"
     environment:
-      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+      MONGODB_URI: "mongodb://mongo:27017/moodlift"
     depends_on:
-      - dynamodb
+      - mongo
 
   ai-service:
     build: ./ai-service
@@ -60,9 +54,9 @@ services:
     ports:
       - "3005:3005"
     environment:
-      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+      MONGODB_URI: "mongodb://mongo:27017/moodlift"
     depends_on:
-      - dynamodb
+      - mongo
 
   feedback-service:
     build: ./feedback-service
@@ -70,9 +64,9 @@ services:
     ports:
       - "3006:3006"
     environment:
-      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+      MONGODB_URI: "mongodb://mongo:27017/moodlift"
     depends_on:
-      - dynamodb
+      - mongo
 
 volumes:
   mongo-data:

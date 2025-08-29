@@ -4,42 +4,35 @@ import { userRepo } from "../models/user.model.js";
 
 export const createUser = async (req, res, next) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      age,
-      gender,
-      language_pref,
-      is_listener,
-      subscription_plan,
-    } = req.body;
-    if (!name || !email || !password) {
+    const { name, email, password, role, freeSessionsUsed } = req.body;
+    if (!name || !email || !password || !role) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    if (!["user", "listener"].includes(role)) {
+      return res
+        .status(400)
+        .json({ message: "Role must be 'user' or 'listener'" });
     }
 
     const already = await userRepo.getUserByEmail(email);
     if (already)
       return res.status(409).json({ message: "Email already exists" });
 
-    const password_hash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
     const now = new Date().toISOString();
     const user = {
-      user_id: uuidv4(),
+      userId: uuidv4(),
       name,
       email,
-      password_hash,
-      age: typeof age === "number" ? age : undefined,
-      gender: gender || undefined,
-      language_pref: language_pref || undefined,
-      is_listener: Boolean(is_listener) || false,
-      subscription_plan: subscription_plan || "free",
-      created_at: now,
-      updated_at: now,
+      passwordHash,
+      role,
+      freeSessionsUsed: freeSessionsUsed || 0,
+      createdAt: now,
     };
 
     await userRepo.createUser(user);
-    const { password_hash: _, ...safe } = user;
+    const { passwordHash: _, ...safe } = user;
     return res.status(201).json(safe);
   } catch (err) {
     return next(err);
@@ -53,7 +46,7 @@ export const getUserById = async (req, res, next) => {
       return res.status(400).json({ message: "Missing userId parameter" });
     const user = await userRepo.getUserById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
-    const { password_hash: _, ...safe } = user;
+    const { passwordHash: _, ...safe } = user;
     return res.json(safe);
   } catch (err) {
     return next(err);
@@ -63,7 +56,7 @@ export const getUserById = async (req, res, next) => {
 export const getAllUsers = async (_req, res, next) => {
   try {
     const users = await userRepo.getAllUsers();
-    return res.json(users.map(({ password_hash, ...u }) => u));
+    return res.json(users);
   } catch (err) {
     return next(err);
   }
@@ -72,14 +65,14 @@ export const getAllUsers = async (_req, res, next) => {
 export const updateUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
-    const updates = { ...req.body, updated_at: new Date().toISOString() };
+    const updates = { ...req.body };
     if (updates.password) {
-      updates.password_hash = await bcrypt.hash(updates.password, 10);
+      updates.passwordHash = await bcrypt.hash(updates.password, 10);
       delete updates.password;
     }
     const updated = await userRepo.updateUser(userId, updates);
     if (!updated) return res.status(404).json({ message: "User not found" });
-    const { password_hash: _, ...safe } = updated;
+    const { passwordHash: _, ...safe } = updated;
     return res.json(safe);
   } catch (err) {
     return next(err);
