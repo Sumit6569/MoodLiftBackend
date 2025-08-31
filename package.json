@@ -1,0 +1,29 @@
+{
+  "name": "moodlift-backend",
+  "version": "1.0.0",
+  "description": "MoodLift Backend Services",
+  "type": "module",
+  "scripts": {
+    "seed": "node seed-data.js",
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "build": "docker-compose build",
+    "logs": "docker-compose logs -f"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "mongoose": "^8.18.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.0"
+  },
+  "keywords": [
+    "moodlift",
+    "mental-health",
+    "microservices",
+    "mongodb"
+  ],
+  "author": "MoodLift Team",
+  "license": "MIT"
+}

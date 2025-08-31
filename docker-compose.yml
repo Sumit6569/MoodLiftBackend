@@ -1,22 +1,15 @@
 version: "3.9"
 services:
-  mongo:
-    image: mongo:7
-    container_name: mongo
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-
   user-service:
     build: ./user-service
     container_name: user-service
     ports:
       - "3001:3001"
     environment:
-      MONGODB_URI: "mongodb://mongo:27017/moodlift"
-    depends_on:
-      - mongo
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+    restart: unless-stopped
 
   session-service:
     build: ./session-service
@@ -24,9 +17,10 @@ services:
     ports:
       - "3002:3002"
     environment:
-      MONGODB_URI: "mongodb://mongo:27017/moodlift"
-    depends_on:
-      - mongo
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+    restart: unless-stopped
 
   chat-service:
     build: ./chat-service
@@ -34,9 +28,10 @@ services:
     ports:
       - "3003:3003"
     environment:
-      MONGODB_URI: "mongodb://mongo:27017/moodlift"
-    depends_on:
-      - mongo
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+    restart: unless-stopped
 
   payment-service:
     build: ./payment-service
@@ -44,9 +39,10 @@ services:
     ports:
       - "3004:3004"
     environment:
-      MONGODB_URI: "mongodb://mongo:27017/moodlift"
-    depends_on:
-      - mongo
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+    restart: unless-stopped
 
   ai-service:
     build: ./ai-service
@@ -54,9 +50,10 @@ services:
     ports:
       - "3005:3005"
     environment:
-      MONGODB_URI: "mongodb://mongo:27017/moodlift"
-    depends_on:
-      - mongo
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+    restart: unless-stopped
 
   feedback-service:
     build: ./feedback-service
@@ -64,9 +61,23 @@ services:
     ports:
       - "3006:3006"
     environment:
-      MONGODB_URI: "mongodb://mongo:27017/moodlift"
-    depends_on:
-      - mongo
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+    restart: unless-stopped
 
-volumes:
-  mongo-data:
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: "development"
+    depends_on:
+      - user-service
+      - session-service
+      - chat-service
+      - payment-service
+      - ai-service
+      - feedback-service
+    restart: unless-stopped

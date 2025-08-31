@@ -1,327 +1,225 @@
-# MoodLift Backend - MongoDB Implementation
+# MoodLift Backend
 
-This is the backend implementation of the MoodLift application, an AI-powered mental wellness platform that provides chat, video call, and instant session support for youth dealing with depression, loneliness, and related challenges.
+A microservices-based backend for the MoodLift mental health platform, built with Node.js, Express, and MongoDB Atlas.
 
-## Architecture
+## 🏗️ Architecture
 
-The application follows a microservices architecture with the following services:
+The backend consists of the following microservices:
 
 - **User Service** (Port 3001) - User management and authentication
-- **Session Service** (Port 3002) - Chat and video session management
-- **Chat Service** (Port 3003) - Chat message handling
-- **Payment Service** (Port 3004) - Payment processing and tracking
-- **AI Service** (Port 3005) - AI chatbot interactions
+- **Session Service** (Port 3002) - Therapy session management
+- **Chat Service** (Port 3003) - Real-time messaging
+- **Payment Service** (Port 3004) - Payment processing
+- **AI Service** (Port 3005) - AI-powered mental health assistance
 - **Feedback Service** (Port 3006) - User feedback and ratings
+- **API Gateway** (Port 3000) - Central routing and load balancing
 
-## Technology Stack
-
-- **Runtime**: Node.js (v18 or higher)
-- **Language**: JavaScript (ES6+)
-- **Database**: MongoDB with Mongoose ODM
-- **Framework**: Express.js
-- **Containerization**: Docker and Docker Compose
-- **Security**: Helmet.js, CORS, Rate Limiting
-- **Logging**: Morgan
-- **Compression**: Compression middleware
-
-## Database Schema
-
-All services use MongoDB with the following collections:
-
-### Users Collection
-
-```javascript
-{
-  userId: String (required, unique, indexed),
-  name: String (required),
-  email: String (required, unique, indexed),
-  passwordHash: String (required),
-  role: String (required, enum: ['user', 'listener']),
-  freeSessionsUsed: Number (default: 0),
-  createdAt: String (ISO 8601 timestamp)
-}
-```
-
-### Sessions Collection
-
-```javascript
-{
-  sessionId: String (required, unique, indexed),
-  userId: String (required, indexed),
-  listenerId: String (required, indexed),
-  type: String (required, enum: ['chat', 'video']),
-  status: String (required, enum: ['pending', 'active', 'completed']),
-  startTime: String (required, ISO 8601 timestamp),
-  endTime: String (optional, ISO 8601 timestamp),
-  cost: Number (required)
-}
-```
-
-### ChatMessages Collection
-
-```javascript
-{
-  sessionId: String (required, indexed),
-  messageId: String (required, unique, indexed),
-  senderId: String (required, indexed),
-  content: String (required),
-  timestamp: String (required, ISO 8601)
-}
-```
-
-### Payments Collection
-
-```javascript
-{
-  paymentId: String (required, unique, indexed),
-  userId: String (required, indexed),
-  sessionId: String (required, indexed),
-  amount: Number (required),
-  status: String (required, enum: ['pending', 'completed', 'failed']),
-  createdAt: String (required, ISO 8601 timestamp)
-}
-```
-
-### AI_Interactions Collection
-
-```javascript
-{
-  interactionId: String (required, unique, indexed),
-  userId: String (required, indexed),
-  query: String (required),
-  response: String (required),
-  timestamp: String (required, ISO 8601 timestamp)
-}
-```
-
-### Feedback Collection
-
-```javascript
-{
-  feedbackId: String (required, unique, indexed),
-  userId: String (required, indexed),
-  sessionId: String (required, indexed),
-  rating: Number (required, min: 1, max: 5),
-  comments: String (required),
-  createdAt: String (required, ISO 8601 timestamp)
-}
-```
-
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
 - Docker and Docker Compose
-- MongoDB (automatically set up via Docker)
+- Node.js 18+ (for running seed script)
+- MongoDB Atlas account
 
-### Installation
-
-1. Clone the repository:
+### 1. Clone and Setup
 
 ```bash
-git clone <repository-url>
 cd MoodLiftBackend
+npm install
 ```
 
-2. Install dependencies for all services:
+### 2. Database Setup
+
+The project is configured to use MongoDB Atlas. The connection string is already set up in the `docker-compose.yml` file.
+
+### 3. Seed Sample Data
 
 ```bash
-# Install dependencies for each service
-cd user-service && npm install && cd ..
-cd session-service && npm install && cd ..
-cd chat-service && npm install && cd ..
-cd payment-service && npm install && cd ..
-cd ai-service && npm install && cd ..
-cd feedback-service && npm install && cd ..
+npm run seed
 ```
 
-3. Start all services using Docker Compose:
+This will create sample data including:
+- 6 users (3 regular users, 3 listeners)
+- 4 therapy sessions
+- 5 chat messages
+- 4 payments
+- 3 AI interactions
+- 3 feedback entries
+
+### 4. Start Services
 
 ```bash
+# Build and start all services
+npm run build
+npm run start
+
+# Or use docker-compose directly
 docker-compose up -d
 ```
 
-This will start:
+### 5. Verify Services
 
-- MongoDB database on port 27017
-- User Service on port 3001
-- Session Service on port 3002
-- Chat Service on port 3003
-- Payment Service on port 3004
-- AI Service on port 3005
-- Feedback Service on port 3006
-
-### Development
-
-To run services individually in development mode:
+Check if all services are running:
 
 ```bash
-# User Service
-cd user-service && npm run dev
+# View logs
+npm run logs
 
-# Session Service
-cd session-service && npm run dev
-
-# Chat Service
-cd chat-service && npm run dev
-
-# Payment Service
-cd payment-service && npm run dev
-
-# AI Service
-cd ai-service && npm run dev
-
-# Feedback Service
-cd feedback-service && npm run dev
+# Check individual service health
+curl http://localhost:3001/api/health  # User Service
+curl http://localhost:3002/health      # Session Service
+curl http://localhost:3003/health      # Chat Service
+curl http://localhost:3004/health      # Payment Service
+curl http://localhost:3005/health      # AI Service
+curl http://localhost:3006/health      # Feedback Service
 ```
 
-## API Endpoints
+## 📊 Sample Data
 
-### User Service (Port 3001)
+After running the seed script, you'll have the following test accounts:
 
-- `POST /api/users` - Create a new user
-- `GET /api/users/:userId` - Get user by ID
-- `GET /api/users` - Get all users
-- `PUT /api/users/:userId` - Update user
-- `DELETE /api/users/:userId` - Delete user
+### Users
+- **john.doe@example.com** / password123 (User)
+- **jane.smith@example.com** / password123 (User)
+- **mike.johnson@example.com** / password123 (User)
 
-### Session Service (Port 3002)
+### Listeners
+- **sarah.wilson@moodlift.com** / password123 (Listener)
+- **robert.chen@moodlift.com** / password123 (Listener)
+- **emily.davis@moodlift.com** / password123 (Listener)
 
-- `POST /api/sessions` - Create a new session
-- `GET /api/sessions/:sessionId` - Get session by ID
-- `GET /api/sessions/user/:userId` - Get sessions by user
-- `GET /api/sessions/listener/:listenerId` - Get sessions by listener
-- `GET /api/sessions` - Get all sessions
-- `PUT /api/sessions/:sessionId` - Update session
-- `DELETE /api/sessions/:sessionId` - Delete session
+## 🔧 Configuration
 
-### Chat Service (Port 3003)
+### Environment Variables
 
-- `POST /api/messages` - Create a new message
-- `GET /api/messages/message/:messageId` - Get message by ID
-- `GET /api/messages/session/:sessionId` - Get messages by session
-- `GET /api/messages/sender/:senderId` - Get messages by sender
-- `GET /api/messages` - Get all messages
-- `PUT /api/messages/:messageId` - Update message
-- `DELETE /api/messages/:messageId` - Delete message
-- `DELETE /api/messages/session/:sessionId` - Delete messages by session
+All services use the following environment variables:
 
-### Payment Service (Port 3004)
+- `MONGODB_URI` - MongoDB Atlas connection string
+- `MONGODB_DB` - Database name (default: "moodlift")
+- `NODE_ENV` - Environment (development/production)
+- `PORT` - Service port (auto-configured per service)
 
-- `POST /api/payments` - Create a new payment
-- `GET /api/payments/:paymentId` - Get payment by ID
-- `GET /api/payments/user/:userId` - Get payments by user
-- `GET /api/payments/session/:sessionId` - Get payments by session
-- `GET /api/payments/status/:status` - Get payments by status
-- `GET /api/payments` - Get all payments
-- `PUT /api/payments/:paymentId` - Update payment
-- `DELETE /api/payments/:paymentId` - Delete payment
+### MongoDB Collections
 
-### AI Service (Port 3005)
+The database contains the following collections:
 
-- `POST /api/interactions` - Create a new AI interaction
-- `GET /api/interactions/:interactionId` - Get interaction by ID
-- `GET /api/interactions/user/:userId` - Get interactions by user
-- `GET /api/interactions/date-range/:startDate/:endDate` - Get interactions by date range
-- `GET /api/interactions` - Get all interactions
-- `PUT /api/interactions/:interactionId` - Update interaction
-- `DELETE /api/interactions/:interactionId` - Delete interaction
-- `DELETE /api/interactions/user/:userId` - Delete interactions by user
+- `users` - User accounts and profiles
+- `sessions` - Therapy session records
+- `chatMessages` - Chat conversation messages
+- `payments` - Payment transaction records
+- `ai_interactions` - AI chat interactions
+- `feedback` - User feedback and ratings
 
-### Feedback Service (Port 3006)
+## 🛠️ Development
 
-- `POST /api/feedback` - Create a new feedback
-- `GET /api/feedback/:feedbackId` - Get feedback by ID
-- `GET /api/feedback/user/:userId` - Get feedback by user
-- `GET /api/feedback/session/:sessionId` - Get feedback by session
-- `GET /api/feedback/rating/:rating` - Get feedback by rating
-- `GET /api/feedback/stats/average` - Get average rating
-- `GET /api/feedback` - Get all feedback
-- `PUT /api/feedback/:feedbackId` - Update feedback
-- `DELETE /api/feedback/:feedbackId` - Delete feedback
+### Adding New Services
 
-## Health Checks
+1. Create a new service directory
+2. Add Dockerfile
+3. Update `docker-compose.yml`
+4. Add service to gateway configuration
 
-All services provide health check endpoints:
+### Database Schema Changes
 
-- `GET /health` - Returns service status and timestamp
+1. Update the model files in each service
+2. Update the seed script if needed
+3. Run `npm run seed` to update sample data
 
-## Environment Variables
+### API Documentation
 
-Each service uses the following environment variables:
+Each service exposes RESTful APIs:
 
-- `MONGODB_URI` - MongoDB connection string (default: `mongodb://localhost:27017/moodlift`)
-- `PORT` - Service port number
+- **User Service**: `/api/v1/users/*`
+- **Session Service**: `/api/sessions/*`
+- **Chat Service**: `/api/messages/*`
+- **Payment Service**: `/api/payments/*`
+- **AI Service**: `/api/interactions/*`
+- **Feedback Service**: `/api/feedback/*`
 
-## Database Indexes
+## 🐳 Docker Commands
 
-The following indexes are created for optimal performance:
+```bash
+# Build all services
+docker-compose build
 
-### Users Collection
+# Start all services
+docker-compose up -d
 
-- `userId` (unique)
-- `email` (unique)
+# Stop all services
+docker-compose down
 
-### Sessions Collection
+# View logs
+docker-compose logs -f
 
-- `sessionId` (unique)
-- `userId`
-- `listenerId`
+# Restart a specific service
+docker-compose restart user-service
 
-### ChatMessages Collection
+# Scale a service
+docker-compose up -d --scale user-service=3
+```
 
-- `sessionId`
-- `messageId` (unique)
-- `senderId`
-- Compound index: `{ sessionId: 1, timestamp: 1 }`
+## 🔍 Monitoring
 
-### Payments Collection
+### Health Checks
 
-- `paymentId` (unique)
-- `userId`
-- `sessionId`
+Each service provides a health endpoint:
 
-### AI_Interactions Collection
+```bash
+curl http://localhost:3001/api/health
+```
 
-- `interactionId` (unique)
-- `userId`
-- Compound index: `{ userId: 1, timestamp: -1 }`
+### Logs
 
-### Feedback Collection
+View service logs:
 
-- `feedbackId` (unique)
-- `userId`
-- `sessionId`
+```bash
+# All services
+docker-compose logs -f
 
-## Error Handling
+# Specific service
+docker-compose logs -f user-service
+```
 
-All services include comprehensive error handling with:
+## 🚨 Troubleshooting
 
-- Input validation
-- Database error handling
-- HTTP status codes
-- Error logging
-- Graceful shutdown
+### Common Issues
 
-## Security Features
+1. **MongoDB Connection Failed**
+   - Verify the connection string in `docker-compose.yml`
+   - Check if MongoDB Atlas is accessible
+   - Ensure IP whitelist includes your IP
 
-- Rate limiting (100 requests per 15 minutes per IP)
-- Helmet.js for security headers
-- CORS configuration
-- Input sanitization
-- Password hashing with bcrypt
+2. **Service Won't Start**
+   - Check if ports are already in use
+   - Verify Docker is running
+   - Check service logs: `docker-compose logs service-name`
 
-## Monitoring
+3. **Database Empty**
+   - Run the seed script: `npm run seed`
+   - Check if MongoDB connection is successful
 
-Each service includes:
+### Reset Everything
 
-- Request logging with Morgan
-- Error logging
-- Health check endpoints
-- Graceful shutdown handling
+```bash
+# Stop and remove all containers
+docker-compose down -v
 
-## Contributing
+# Remove all images
+docker-compose down --rmi all
+
+# Rebuild and start
+docker-compose up -d --build
+
+# Seed data
+npm run seed
+```
+
+## 📝 License
+
+MIT License - see LICENSE file for details.
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -329,6 +227,6 @@ Each service includes:
 4. Add tests if applicable
 5. Submit a pull request
 
-## License
+## 📞 Support
 
-This project is licensed under the ISC License.
+For support and questions, please contact the development team.
