@@ -8,8 +8,6 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 
 import userRoute from "./routes/user.route.js";
-import { errorHandler } from "./middleware/errorHandler.js";
-import { notFoundHandler } from "./middleware/notFoundHandler.js";
 
 // Load environment variables
 dotenv.config();
@@ -55,17 +53,20 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/v1/users", userRoute);
 
 // Error handling middleware
-app.use(notFoundHandler);
-app.use(errorHandler);
+
 
 // Start server
 const MONGODB_URI =
   process.env["MONGODB_URI"] || "mongodb://127.0.0.1:27017/moodlift";
 
 mongoose
-  .connect(MONGODB_URI, { dbName: process.env["MONGODB_DB"] || undefined })
+  .connect(MONGODB_URI, { 
+    dbName: process.env["MONGODB_DB"] || "moodlift",
+    retryWrites: true,
+    w: "majority"
+  })
   .then(() => {
-    console.log("✅ Connected to MongoDB");
+    console.log("✅ Connected to MongoDB Atlas");
     app.listen(PORT, () => {
       console.log(`🚀 User Service running on port ${PORT}`);
       console.log(

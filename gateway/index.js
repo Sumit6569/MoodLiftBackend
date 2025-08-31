@@ -22,12 +22,9 @@ app.use((req, res, next) => {
 
 // Routes
 app.use("/health", (req, res) => res.send("OK"));
-app.use("/auth", proxy("http://localhost:4001"));
-app.use("/sessions", proxy("http://localhost:4002"));
-
-
-app.use("/social", proxy("http://localhost:4003"));
-app.use("/analytics", proxy("http://localhost:4004"));
-app.use("/notifications", proxy("http://localhost:4005"));
-
-app.listen(4000, () => console.log("🚀 API Gateway running on 4000"));
+app.use("/auth", proxy("http://localhost:3001"));
+app.use("/sessions", proxy("http://localhost:3002"));
+app.use("/social", proxy("http://localhost:3003"));
+app.use("/analytics", proxy("http://localhost:3004"));
+app.use("/notifications", proxy("http://localhost:3005"));
+app.listen(3000, () => console.log("🚀 API Gateway running on 4000"));

@@ -7,8 +7,6 @@ import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import { connectDB } from "./config/mongodb.js";
 import paymentRoutes from "./routes/payment.route.js";
-import { errorHandler } from "./middleware/errorHandler.js";
-import { notFoundHandler } from "./middleware/notFoundHandler.js";
 
 dotenv.config();
 
@@ -48,8 +46,7 @@ app.get("/health", (req, res) => {
 app.use("/api/payments", paymentRoutes);
 
 // Error handling middleware
-app.use(notFoundHandler);
-app.use(errorHandler);
+
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
