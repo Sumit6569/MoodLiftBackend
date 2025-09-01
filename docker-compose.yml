@@ -1,68 +1,98 @@
-
-version: "3.9"
 services:
-  dynamodb:
-    build: ./db/dynamodb-local
-    container_name: dynamodb-local
+  mongo:
+    image: mongo:6
+    container_name: mongodb
+    restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - backend_network
 
   user-service:
     build: ./user-service
     container_name: user-service
+    restart: unless-stopped
     ports:
       - "3001:3001"
     environment:
-      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+      MONGO_URI: "mongodb://mongodb:27017/user-service"
     depends_on:
-      - dynamodb
+      - mongo
+    networks:
+      - backend_network
 
   session-service:
     build: ./session-service
     container_name: session-service
+    restart: unless-stopped
     ports:
       - "3002:3002"
     environment:
-      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+      MONGO_URI: "mongodb://mongodb:27017/session-service"
     depends_on:
-      - dynamodb
+      - mongo
+    networks:
+      - backend_network
 
   chat-service:
     build: ./chat-service
     container_name: chat-service
+    restart: unless-stopped
     ports:
       - "3003:3003"
     environment:
-      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+      MONGO_URI: "mongodb://mongodb:27017/chat-service"
     depends_on:
-      - dynamodb
+      - mongo
+    networks:
+      - backend_network
 
   payment-service:
     build: ./payment-service
     container_name: payment-service
+    restart: unless-stopped
     ports:
       - "3004:3004"
     environment:
-      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+      MONGO_URI: "mongodb://mongodb:27017/payment-service"
     depends_on:
-      - dynamodb
+      - mongo
+    networks:
+      - backend_network
 
   ai-service:
     build: ./ai-service
     container_name: ai-service
+    restart: unless-stopped
     ports:
       - "3005:3005"
     environment:
-      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+      MONGO_URI: "mongodb://mongodb:27017/ai-service"
     depends_on:
-      - dynamodb
+      - mongo
+    networks:
+      - backend_network
 
   feedback-service:
     build: ./feedback-service
     container_name: feedback-service
+    restart: unless-stopped
     ports:
       - "3006:3006"
     environment:
-      DYNAMODB_ENDPOINT: "http://dynamodb:8000"
+      MONGO_URI: "mongodb://mongodb:27017/feedback-service"
     depends_on:
-      - dynamodb
+      - mongo
+    networks:
+      - backend_network
+
+# Define persistent volumes
+volumes:
+  mongo_data:
+
+# Define networks
+networks:
+  backend_network:
+    driver: bridge
