@@ -17,11 +17,10 @@ services:
     ports:
       - "3001:3001"
     environment:
-      MONGO_URI: "mongodb://mongodb:27017/user-service"
-    depends_on:
-      - mongo
-    networks:
-      - backend_network
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+    
 
   session-service:
     build: ./session-service
@@ -30,11 +29,10 @@ services:
     ports:
       - "3002:3002"
     environment:
-      MONGO_URI: "mongodb://mongodb:27017/session-service"
-    depends_on:
-      - mongo
-    networks:
-      - backend_network
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+   
 
   chat-service:
     build: ./chat-service
@@ -43,11 +41,10 @@ services:
     ports:
       - "3003:3003"
     environment:
-      MONGO_URI: "mongodb://mongodb:27017/chat-service"
-    depends_on:
-      - mongo
-    networks:
-      - backend_network
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+    
 
   payment-service:
     build: ./payment-service
@@ -56,11 +53,10 @@ services:
     ports:
       - "3004:3004"
     environment:
-      MONGO_URI: "mongodb://mongodb:27017/payment-service"
-    depends_on:
-      - mongo
-    networks:
-      - backend_network
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+    
 
   ai-service:
     build: ./ai-service
@@ -69,11 +65,10 @@ services:
     ports:
       - "3005:3005"
     environment:
-      MONGO_URI: "mongodb://mongodb:27017/ai-service"
-    depends_on:
-      - mongo
-    networks:
-      - backend_network
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+   
 
   feedback-service:
     build: ./feedback-service
@@ -82,17 +77,23 @@ services:
     ports:
       - "3006:3006"
     environment:
-      MONGO_URI: "mongodb://mongodb:27017/feedback-service"
+      MONGODB_URI: "mongodb+srv://infosumitkumar3322_db_user:aAAwuVWdYLZhSuoX@cluster0.0bojjbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      MONGODB_DB: "moodlift"
+      NODE_ENV: "development"
+    
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: "development"
     depends_on:
-      - mongo
-    networks:
-      - backend_network
-
-# Define persistent volumes
-volumes:
-  mongo_data:
-
-# Define networks
-networks:
-  backend_network:
-    driver: bridge
+      - user-service
+      - session-service
+      - chat-service
+      - payment-service
+      - ai-service
+      - feedback-service
+    restart: unless-stopped
