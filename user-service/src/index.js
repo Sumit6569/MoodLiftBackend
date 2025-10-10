@@ -8,6 +8,8 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 
 import userRoute from "./routes/user.route.js";
+import authRoute from "./routes/auth.route.js";
+import listenerRoute from "./routes/listener.route.js";
 
 // Load environment variables
 dotenv.config();
@@ -51,19 +53,72 @@ app.get("/api/health", (_req, res) => {
 
 // API routes
 app.use("/api/v1/users", userRoute);
+app.use("/api/v1/auth", authRoute);
+app.use("/api/v1/listeners", listenerRoute);
 
 // Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
 
+  // MongoDB duplicate key error
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyPattern)[0];
+    return res.status(409).json({
+      success: false,
+      message: `${field} already exists`,
+    });
+  }
+
+  // MongoDB validation error
+  if (err.name === "ValidationError") {
+    const errors = Object.values(err.errors).map((e) => e.message);
+    return res.status(400).json({
+      success: false,
+      message: "Validation error",
+      errors,
+    });
+  }
+
+  // JWT errors
+  if (err.name === "JsonWebTokenError") {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid token",
+    });
+  }
+
+  if (err.name === "TokenExpiredError") {
+    return res.status(401).json({
+      success: false,
+      message: "Token expired",
+    });
+  }
+
+  // Default error response
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+  });
+});
+
+// 404 handler
+app.use("*", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found`,
+  });
+});
 
 // Start server
 const MONGODB_URI =
   process.env["MONGODB_URI"] || "mongodb://127.0.0.1:27017/moodlift";
 
 mongoose
-  .connect(MONGODB_URI, { 
+  .connect(MONGODB_URI, {
     dbName: process.env["MONGODB_DB"] || "moodlift",
     retryWrites: true,
-    w: "majority"
+    w: "majority",
   })
   .then(() => {
     console.log("✅ Connected to MongoDB Atlas");
