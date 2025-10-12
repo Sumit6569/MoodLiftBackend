@@ -9,6 +9,7 @@ import {
 
 const router = Router();
 
+// Temporarily remove auth middleware
 router.get("/", getAllUsers);
 router.get("/:userId", getUserById);
 router.post("/", createUser);

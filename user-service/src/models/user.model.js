@@ -8,7 +8,36 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ["user", "listener"], required: true },
     freeSessionsUsed: { type: Number, default: 0 },
+
+    // Listener-specific fields
+    bio: {
+      type: String,
+      required: function () {
+        return this.role === "listener";
+      },
+    },
+    expertise: [{ type: String }], // Array of expertise areas
+    hourlyRate: {
+      type: Number,
+      min: 10,
+      max: 200,
+      required: function () {
+        return this.role === "listener";
+      },
+    },
+    isApproved: { type: Boolean, default: false }, // For listener approval process
+
+    // Email verification
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String },
+    emailVerificationExpires: { type: Date },
+
+    // Password reset
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date },
+
     createdAt: { type: Date, default: () => new Date() },
+    updatedAt: { type: Date, default: () => new Date() },
   },
   { collection: "users" }
 );
@@ -22,7 +51,9 @@ export const UserModel =
 
 export const userRepo = {
   async getAllUsers() {
-    return await UserModel.find().select("-passwordHash").lean();
+    return await UserModel.find()
+      .select("-passwordHash -emailVerificationToken -passwordResetToken")
+      .lean();
   },
   async getUserByEmail(email) {
     return await UserModel.findOne({ email }).lean();
@@ -32,7 +63,9 @@ export const userRepo = {
     return doc.toObject();
   },
   async getUserById(userId) {
-    return await UserModel.findOne({ userId }).lean();
+    return await UserModel.findOne({ userId })
+      .select("-passwordHash -emailVerificationToken -passwordResetToken")
+      .lean();
   },
   async updateUser(userId, updates) {
     return await UserModel.findOneAndUpdate({ userId }, updates, {
@@ -42,5 +75,35 @@ export const userRepo = {
   },
   async deleteUser(userId) {
     await UserModel.deleteOne({ userId });
+  },
+  async getUserByEmailVerificationToken(token) {
+    return await UserModel.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: new Date() },
+    }).lean();
+  },
+  async getUserByPasswordResetToken(token) {
+    return await UserModel.findOne({
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: new Date() },
+    }).lean();
+  },
+  async getApprovedListeners() {
+    return await UserModel.find({
+      role: "listener",
+      isApproved: true,
+      isEmailVerified: true,
+    })
+      .select("-passwordHash -emailVerificationToken -passwordResetToken")
+      .lean();
+  },
+  async getPendingListeners() {
+    return await UserModel.find({
+      role: "listener",
+      isApproved: false,
+      isEmailVerified: true,
+    })
+      .select("-passwordHash -emailVerificationToken -passwordResetToken")
+      .lean();
   },
 };
