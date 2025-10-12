@@ -3,18 +3,21 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon --watch src --ext js --exec node src/index.js",
-    "start": "node src/index.js",
+    "start": "node dist/index.js",
+    "start:dev": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm run build"
-
+    "build": "npm run clean && node build.config.js",
+    "clean": "if exist dist rmdir /s /q dist || echo Directory cleaned",
+    "build:simple": "esbuild src/index.js --bundle --platform=node --target=node18 --format=esm --outfile=dist/index.js --sourcemap"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "esbuild": "^0.25.10",
     "nodemon": "^3.0.2"
   },
   "dependencies": {
