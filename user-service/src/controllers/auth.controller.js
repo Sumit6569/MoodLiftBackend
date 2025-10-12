@@ -29,7 +29,7 @@ export const register = async (req, res, next) => {
     if (!fullName || !email || !password || !role) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields: fullName, email, password, role",
+        message: "Missing required   fields: fullName, email, password, role",
       });
     }
 
@@ -77,10 +77,6 @@ export const register = async (req, res, next) => {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Generate email verification token
-    const emailVerificationToken = generateRandomToken();
-    const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
     // Prepare user data
     const userData = {
       userId: uuidv4(),
@@ -88,9 +84,8 @@ export const register = async (req, res, next) => {
       email,
       passwordHash,
       role,
-      emailVerificationToken,
-      emailVerificationExpires,
-      isEmailVerified: false,
+      // Users are treated as verified by default; listeners require email verification
+      isEmailVerified: role === "user" ? true : false,
       freeSessionsUsed: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -98,6 +93,25 @@ export const register = async (req, res, next) => {
 
     // Add listener-specific fields if role is listener
     if (role === "listener") {
+      userData.bio = bio;
+      userData.expertise = Array.isArray(expertise)
+        ? expertise
+        : expertise.split(",").map((e) => e.trim());
+      userData.hourlyRate = parseFloat(hourlyRate);
+      userData.isApproved = false; // Listeners need approval
+    }
+
+    // If role is listener, generate email verification token and add listener-specific fields
+    let emailVerificationToken;
+    if (role === "listener") {
+      emailVerificationToken = generateRandomToken();
+      const emailVerificationExpires = new Date(
+        Date.now() + 24 * 60 * 60 * 1000
+      ); // 24 hours
+      userData.emailVerificationToken = emailVerificationToken;
+      userData.emailVerificationExpires = emailVerificationExpires;
+
+      // Add listener-specific fields
       userData.bio = bio;
       userData.expertise = Array.isArray(expertise)
         ? expertise
@@ -128,13 +142,15 @@ export const register = async (req, res, next) => {
       message:
         role === "listener"
           ? "Listener application submitted successfully. Please check your email for verification."
-          : "User registered successfully. Please check your email for verification.",
+          : "User registered successfully.",
       user: safeUser,
       token,
     });
 
-    // TODO: Send verification email (implement email service)
-    console.log(`Verification token for ${email}: ${emailVerificationToken}`);
+    // If listener, log/send verification token (email service integration pending)
+    if (role === "listener") {
+      console.log(`Verification token for ${email}: ${emailVerificationToken}`);
+    }
   } catch (error) {
     console.error("Registration error:", error);
     next(error);
