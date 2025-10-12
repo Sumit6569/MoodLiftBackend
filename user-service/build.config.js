@@ -1,6 +1,10 @@
 import { build } from "esbuild";
-import { copyFileSync, mkdirSync, existsSync } from "fs";
-import { join, dirname } from "path";
+import { writeFileSync, mkdirSync, existsSync, rmSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const buildOptions = {
   entryPoints: ["src/index.js"],
@@ -36,10 +40,12 @@ async function buildProject() {
   try {
     console.log("🏗️  Building user-service...");
 
-    // Ensure dist directory exists
-    if (!existsSync("dist")) {
-      mkdirSync("dist", { recursive: true });
+    // Clean and create dist directory
+    if (existsSync("dist")) {
+      rmSync("dist", { recursive: true, force: true });
+      console.log("🧹 Cleaned existing dist directory");
     }
+    mkdirSync("dist", { recursive: true });
 
     // Build with esbuild
     await build(buildOptions);
@@ -69,12 +75,7 @@ async function buildProject() {
       },
     };
 
-    await import("fs").then((fs) => {
-      fs.writeFileSync(
-        "dist/package.json",
-        JSON.stringify(packageJson, null, 2)
-      );
-    });
+    writeFileSync("dist/package.json", JSON.stringify(packageJson, null, 2));
 
     console.log("✅ Build completed successfully!");
     console.log("📁 Output: dist/index.js");

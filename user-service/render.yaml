@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: moodlift-user-service
+    env: node
+    plan: starter
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: USER_SERVICE_PORT
+        value: 3001
+      - key: MONGODB_URI
+        fromDatabase:
+          name: moodlift-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+
+databases:
+  - name: moodlift-db
+    databaseName: moodlift
+    user: moodlift-user
