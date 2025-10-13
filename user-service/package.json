@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "description": "Production-ready Node.js backend with build step",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node dist/index.cjs",
-    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify --external:mongoose --external:bcryptjs --external:express --external:express-rate-limit --external:compression --external:cors --external:dotenv --external:helmet --external:jsonwebtoken --external:morgan --external:nodemailer --external:uuid",
     "prebuild": "node -e \"const fs = require('fs'); if (!fs.existsSync('dist')) fs.mkdirSync('dist', { recursive: true });\"",
+    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify --external:mongoose --external:bcryptjs --external:express --external:express-rate-limit --external:compression --external:cors --external:dotenv --external:helmet --external:jsonwebtoken --external:morgan --external:nodemailer --external:uuid",
+    "postbuild": "echo '✅ Build completed successfully'",
+    "postinstall": "npm run build",
     "clean": "rm -rf dist",
-    "deploy": "npm run clean && npm run build && echo '🚀 Build ready for deployment'",
-    "postbuild": "echo '✅ Build completed successfully'"
+    "deploy": "npm run clean && npm run build && echo '🚀 Build ready for deployment'"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -25,10 +26,10 @@
     "mongoose": "^8.6.1",
     "morgan": "^1.10.1",
     "nodemailer": "^6.9.15",
-    "uuid": "^11.1.0",
-    "esbuild": "^0.25.10"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "esbuild": "^0.25.10"
   }
 }

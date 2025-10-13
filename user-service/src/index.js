@@ -121,7 +121,7 @@ mongoose
     w: "majority",
   })
   .then(() => {
-    console.log("✅ Connected to MongoDB Atlas");
+    console.log("✅ Connecte dddfd to MongoDB Atlas");
     app.listen(PORT, () => {
       console.log(`🚀 User Service running on port ${PORT}`);
       console.log(
