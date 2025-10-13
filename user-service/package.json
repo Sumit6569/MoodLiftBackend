@@ -6,9 +6,9 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node dist/index.js",
-    "build": "npx esbuild src/index.js --bundle --platform=node --outdir=dist --minify --external:mongoose --external:bcryptjs --external:express --external:express-rate-limit --external:compression --external:cors --external:dotenv --external:helmet --external:jsonwebtoken --external:morgan --external:nodemailer --external:uuid",
-    "prebuild": "mkdir -p dist",
+    "start": "node dist/index.cjs",
+    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify --external:mongoose --external:bcryptjs --external:express --external:express-rate-limit --external:compression --external:cors --external:dotenv --external:helmet --external:jsonwebtoken --external:morgan --external:nodemailer --external:uuid",
+    "prebuild": "node -e \"const fs = require('fs'); if (!fs.existsSync('dist')) fs.mkdirSync('dist', { recursive: true });\"",
     "clean": "rm -rf dist",
     "deploy": "npm run clean && npm run build && echo '🚀 Build ready for deployment'",
     "postbuild": "echo '✅ Build completed successfully'"
