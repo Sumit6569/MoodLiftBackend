@@ -1,28 +1,15 @@
 {
   "name": "user-service",
   "version": "1.0.0",
-  "description": "",
+  "description": "Production-ready Node.js backend with build step",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon --watch src --ext js --exec node src/index.js",
+    "dev": "nodemon src/index.js",
     "start": "node dist/index.js",
-    "start:dev": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node build.config.js",
-    "clean": "node -e \"const fs = require('fs'); if(fs.existsSync('dist')) fs.rmSync('dist', {recursive: true}); console.log('Cleaned dist directory');\"",
-    "prebuild": "npm run clean",
-    "postbuild": "echo \"✅ Build completed! Files ready in dist/ directory\"",
-    "deploy": "npm run build && echo \"🚀 Ready for deployment\"",
-    "docker:build": "docker build -t moodlift-user-service .",
-    "docker:run": "docker run -p 3001:3001 --env-file .env moodlift-user-service"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "esbuild": "^0.25.10",
-    "nodemon": "^3.0.2"
+    "build": "esbuild src/index.js --bundle --platform=node --outdir=dist --minify",
+    "clean": "rm -rf dist",
+    "deploy": "npm run clean && npm run build && echo '🚀 Build ready for deployment'"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -37,5 +24,9 @@
     "morgan": "^1.10.1",
     "nodemailer": "^6.9.15",
     "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.10",
+    "nodemon": "^3.0.2"
   }
 }
