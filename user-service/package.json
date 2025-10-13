@@ -8,10 +8,10 @@
     "dev": "nodemon src/index.js",
     "start": "node dist/index.cjs",
     "prebuild": "node -e \"const fs = require('fs'); if (!fs.existsSync('dist')) fs.mkdirSync('dist', { recursive: true });\"",
-    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify --external:mongoose --external:bcryptjs --external:express --external:express-rate-limit --external:compression --external:cors --external:dotenv --external:helmet --external:jsonwebtoken --external:morgan --external:nodemailer --external:uuid",
+    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify",
     "postbuild": "echo '✅ Build completed successfully'",
     "postinstall": "npm run build",
-    "clean": "rm -rf dist",
+    "clean": "node -e \"const fs = require('fs'); const path = require('path'); if (fs.existsSync('dist')) { fs.rmSync('dist', { recursive: true, force: true }); console.log('✅ Cleaned dist directory'); }\"",
     "deploy": "npm run clean && npm run build && echo '🚀 Build ready for deployment'"
   },
   "dependencies": {
