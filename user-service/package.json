@@ -7,11 +7,11 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node dist/index.js",
-    "clean": "rm -rf dist",
-    "prebuild": "mkdir -p dist",
-    "build": "npx esbuild src/index.js --platform=node --outdir=dist --minify --packages=external",
-    "deploy": "npm run clean && npm run build && echo '🚀 Build ready for deployment'",
-    "postbuild": "echo '✅ Build completed successfully'"
+    "clean": "node -e \"require('fs').rmSync('dist', {recursive: true, force: true})\"",
+    "prebuild": "node -e \"require('fs').mkdirSync('dist', {recursive: true})\"",
+    "build": "npx esbuild src/index.js --bundle --platform=node --outdir=dist --minify --packages=external",
+    "deploy": "npm run clean && npm run build && echo Build ready for deployment",
+    "postbuild": "echo Build completed successfully"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
