@@ -7,9 +7,9 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node dist/index.js",
-    "build": "npx esbuild src/index.js --bundle --platform=node --outdir=dist --minify --external:mongoose --external:bcryptjs",
-    "prebuild": "node -e \"const fs = require('fs'); if (!fs.existsSync('dist')) fs.mkdirSync('dist', { recursive: true });\"",
     "clean": "rm -rf dist",
+    "prebuild": "mkdir -p dist",
+    "build": "npx esbuild src/index.js --platform=node --outdir=dist --minify --packages=external",
     "deploy": "npm run clean && npm run build && echo '🚀 Build ready for deployment'",
     "postbuild": "echo '✅ Build completed successfully'"
   },
