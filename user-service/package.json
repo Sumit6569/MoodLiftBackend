@@ -8,7 +8,7 @@
     "dev": "nodemon src/index.js",
     "start": "node dist/index.cjs",
     "prebuild": "node -e \"const fs = require('fs'); if (!fs.existsSync('dist')) fs.mkdirSync('dist', { recursive: true });\"",
-    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify",
+    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify --external:express --external:cors --external:helmet --external:morgan --external:compression --external:express-rate-limit --external:dotenv --external:mongoose --external:bcryptjs --external:jsonwebtoken --external:uuid --external:crypto --external:nodemailer",
     "postbuild": "echo '✅ Build completed successfully'",
     "clean": "node -e \"const fs = require('fs'); const path = require('path'); if (fs.existsSync('dist')) { fs.rmSync('dist', { recursive: true, force: true }); console.log('✅ Cleaned dist directory'); }\"",
     "deploy": "npm run clean && npm run build && echo '🚀 Build ready for deployment'"
