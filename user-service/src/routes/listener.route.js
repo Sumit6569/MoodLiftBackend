@@ -5,6 +5,8 @@ import {
   approveListener,
   rejectListener,
   updateListenerProfile,
+  getAllListeners,
+  verifyListener,
 } from "../controllers/listener.controller.js";
 import {
   authenticateToken,
@@ -18,6 +20,7 @@ const router = Router();
 router.get("/approved", getApprovedListeners);
 
 // Admin routes
+router.get("/all", authenticateToken, requireAdmin, getAllListeners);
 router.get("/pending", authenticateToken, requireAdmin, getPendingListeners);
 router.post(
   "/:userId/approve",
@@ -26,6 +29,7 @@ router.post(
   approveListener
 );
 router.post("/:userId/reject", authenticateToken, requireAdmin, rejectListener);
+router.post("/:userId/verify", authenticateToken, requireAdmin, verifyListener);
 
 // Listener profile management (listener can update their own profile, admin can update any)
 router.put(

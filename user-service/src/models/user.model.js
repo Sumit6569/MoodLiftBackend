@@ -100,4 +100,11 @@ export const userRepo = {
       .select("-passwordHash -passwordResetToken")
       .lean();
   },
+  async getAllListeners() {
+    return await UserModel.find({
+      role: "listener",
+    })
+      .select("-passwordHash -passwordResetToken")
+      .lean();
+  },
 };

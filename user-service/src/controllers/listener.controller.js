@@ -177,3 +177,70 @@ export const updateListenerProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+// Get all listeners (admin only - both approved and pending)
+export const getAllListeners = async (req, res, next) => {
+  try {
+    const listeners = await userRepo.getAllListeners();
+    res.json({
+      success: true,
+      listeners,
+    });
+  } catch (error) {
+    console.error("Get all listeners error:", error);
+    next(error);
+  }
+};
+
+// Verify listener (admin only - for isVerified field)
+export const verifyListener = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { isVerified } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    if (typeof isVerified !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isVerified must be a boolean value",
+      });
+    }
+
+    const user = await userRepo.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.role !== "listener") {
+      return res.status(400).json({
+        success: false,
+        message: "User is not a listener",
+      });
+    }
+
+    const updatedUser = await userRepo.updateUser(userId, {
+      isVerified,
+      updatedAt: new Date(),
+    });
+
+    res.json({
+      success: true,
+      message: `Listener ${
+        isVerified ? "verified" : "unverified"
+      } successfully`,
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Verify listener error:", error);
+    next(error);
+  }
+};
