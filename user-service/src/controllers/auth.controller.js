@@ -15,7 +15,7 @@ const generateToken = (userId, email, role) => {
   });
 };
 
-// Helper function to generate random token
+// Helper function to generate random token for password reset
 const generateRandomToken = () => {
   return crypto.randomBytes(32).toString("hex");
 };
@@ -84,8 +84,8 @@ export const register = async (req, res, next) => {
       email,
       passwordHash,
       role,
-      // Users are treated as verified by default; listeners require email verification
-      isEmailVerified: role === "user" ? true : false,
+      // All users (including listeners) are email verified by default now
+      isEmailVerified: true,
       freeSessionsUsed: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -98,26 +98,8 @@ export const register = async (req, res, next) => {
         ? expertise
         : expertise.split(",").map((e) => e.trim());
       userData.hourlyRate = parseFloat(hourlyRate);
-      userData.isApproved = false; // Listeners need approval
-    }
-
-    // If role is listener, generate email verification token and add listener-specific fields
-    let emailVerificationToken;
-    if (role === "listener") {
-      emailVerificationToken = generateRandomToken();
-      const emailVerificationExpires = new Date(
-        Date.now() + 24 * 60 * 60 * 1000
-      ); // 24 hours
-      userData.emailVerificationToken = emailVerificationToken;
-      userData.emailVerificationExpires = emailVerificationExpires;
-
-      // Add listener-specific fields
-      userData.bio = bio;
-      userData.expertise = Array.isArray(expertise)
-        ? expertise
-        : expertise.split(",").map((e) => e.trim());
-      userData.hourlyRate = parseFloat(hourlyRate);
-      userData.isApproved = false; // Listeners need approval
+      userData.isApproved = false; // Listeners need admin approval (not email verification)
+      userData.isVerified = false; // New field for admin verification
     }
 
     // Create user
@@ -131,26 +113,17 @@ export const register = async (req, res, next) => {
     );
 
     // Remove sensitive data from response
-    const {
-      passwordHash: _,
-      emailVerificationToken: __,
-      ...safeUser
-    } = createdUser;
+    const { passwordHash: _, ...safeUser } = createdUser;
 
     res.status(201).json({
       success: true,
       message:
         role === "listener"
-          ? "Listener application submitted successfully. Please check your email for verification."
+          ? "Listener application submitted successfully. Awaiting admin verification."
           : "User registered successfully.",
       user: safeUser,
       token,
     });
-
-    // If listener, log/send verification token (email service integration pending)
-    if (role === "listener") {
-      console.log(`Verification token for ${email}: ${emailVerificationToken}`);
-    }
   } catch (error) {
     console.error("Registration error:", error);
     next(error);
@@ -187,32 +160,14 @@ export const login = async (req, res, next) => {
       });
     }
 
-    // Check if email is verified
-    if (!user.isEmailVerified) {
-      return res.status(401).json({
-        success: false,
-        message: "Please verify your email before logging in",
-      });
-    }
-
-    // For listeners, check if approved
-    if (user.role === "listener" && !user.isApproved) {
-      return res.status(401).json({
-        success: false,
-        message: "Your listener application is still under review",
-      });
-    }
+    // No email verification check needed anymore
+    // Listeners can login but will see limited features until admin verification
 
     // Generate JWT token
     const token = generateToken(user.userId, user.email, user.role);
 
     // Remove sensitive data from response
-    const {
-      passwordHash: _,
-      emailVerificationToken: __,
-      passwordResetToken: ___,
-      ...safeUser
-    } = user;
+    const { passwordHash: _, passwordResetToken: __, ...safeUser } = user;
 
     res.json({
       success: true,
@@ -250,12 +205,7 @@ export const verifyToken = async (req, res, next) => {
     }
 
     // Remove sensitive data
-    const {
-      passwordHash: _,
-      emailVerificationToken: __,
-      passwordResetToken: ___,
-      ...safeUser
-    } = user;
+    const { passwordHash: _, passwordResetToken: __, ...safeUser } = user;
 
     res.json({
       success: true,
@@ -276,51 +226,7 @@ export const verifyToken = async (req, res, next) => {
   }
 };
 
-export const verifyEmail = async (req, res, next) => {
-  try {
-    const { token } = req.params;
-
-    if (!token) {
-      return res.status(400).json({
-        success: false,
-        message: "Verification token is required",
-      });
-    }
-
-    // Find user with this verification token
-    const user = await userRepo.getUserByEmailVerificationToken(token);
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid or expired verification token",
-      });
-    }
-
-    // Check if token is expired
-    if (user.emailVerificationExpires < new Date()) {
-      return res.status(400).json({
-        success: false,
-        message: "Verification token has expired",
-      });
-    }
-
-    // Update user as verified
-    await userRepo.updateUser(user.userId, {
-      isEmailVerified: true,
-      emailVerificationToken: null,
-      emailVerificationExpires: null,
-      updatedAt: new Date(),
-    });
-
-    res.json({
-      success: true,
-      message: "Email verified successfully",
-    });
-  } catch (error) {
-    console.error("Email verification error:", error);
-    next(error);
-  }
-};
+// Email verification function removed - no longer needed
 
 export const requestPasswordReset = async (req, res, next) => {
   try {

@@ -26,11 +26,10 @@ const userSchema = new mongoose.Schema(
       },
     },
     isApproved: { type: Boolean, default: false }, // For listener approval process
+    isVerified: { type: Boolean, default: false }, // For admin verification of listeners
 
-    // Email verification
-    isEmailVerified: { type: Boolean, default: false },
-    emailVerificationToken: { type: String },
-    emailVerificationExpires: { type: Date },
+    // Email verification removed - all users are automatically verified
+    isEmailVerified: { type: Boolean, default: true },
 
     // Password reset
     passwordResetToken: { type: String },
@@ -52,7 +51,7 @@ export const UserModel =
 export const userRepo = {
   async getAllUsers() {
     return await UserModel.find()
-      .select("-passwordHash -emailVerificationToken -passwordResetToken")
+      .select("-passwordHash -passwordResetToken")
       .lean();
   },
   async getUserByEmail(email) {
@@ -64,7 +63,7 @@ export const userRepo = {
   },
   async getUserById(userId) {
     return await UserModel.findOne({ userId })
-      .select("-passwordHash -emailVerificationToken -passwordResetToken")
+      .select("-passwordHash -passwordResetToken")
       .lean();
   },
   async updateUser(userId, updates) {
@@ -76,12 +75,7 @@ export const userRepo = {
   async deleteUser(userId) {
     await UserModel.deleteOne({ userId });
   },
-  async getUserByEmailVerificationToken(token) {
-    return await UserModel.findOne({
-      emailVerificationToken: token,
-      emailVerificationExpires: { $gt: new Date() },
-    }).lean();
-  },
+  // Email verification token function removed - no longer needed
   async getUserByPasswordResetToken(token) {
     return await UserModel.findOne({
       passwordResetToken: token,
@@ -94,7 +88,7 @@ export const userRepo = {
       isApproved: true,
       isEmailVerified: true,
     })
-      .select("-passwordHash -emailVerificationToken -passwordResetToken")
+      .select("-passwordHash -passwordResetToken")
       .lean();
   },
   async getPendingListeners() {
@@ -103,7 +97,7 @@ export const userRepo = {
       isApproved: false,
       isEmailVerified: true,
     })
-      .select("-passwordHash -emailVerificationToken -passwordResetToken")
+      .select("-passwordHash -passwordResetToken")
       .lean();
   },
 };

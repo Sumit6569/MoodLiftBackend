@@ -3,7 +3,6 @@ import {
   register,
   login,
   verifyToken,
-  verifyEmail,
   requestPasswordReset,
   resetPassword,
 } from "../controllers/auth.controller.js";
@@ -16,7 +15,6 @@ router.post("/register", register);
 
 router.post("/login", login);
 router.get("/verify-token", verifyToken);
-router.get("/verify-email/:token", verifyEmail);
 router.post("/forgot-password", requestPasswordReset);
 router.post("/reset-password/:token", resetPassword);
 
