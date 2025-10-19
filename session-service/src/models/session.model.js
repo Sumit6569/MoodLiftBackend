@@ -8,12 +8,20 @@ const sessionSchema = new mongoose.Schema(
     type: { type: String, enum: ["chat", "video"], required: true },
     status: {
       type: String,
-      enum: ["pending", "active", "completed"],
+      enum: ["pending", "confirmed", "active", "completed", "cancelled"],
       required: true,
+      default: "pending",
     },
     startTime: { type: String, required: true },
     endTime: { type: String },
     cost: { type: Number, required: true },
+    duration: { type: Number }, // in minutes
+    notes: { type: String },
+    listenerNotes: { type: String },
+    rating: { type: Number, min: 1, max: 5 },
+    feedback: { type: String },
+    createdAt: { type: String, default: () => new Date().toISOString() },
+    updatedAt: { type: String, default: () => new Date().toISOString() },
   },
   {
     collection: "sessions",

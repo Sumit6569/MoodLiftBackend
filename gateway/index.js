@@ -116,7 +116,17 @@ app.use(
 );
 
 // Other service routes - use localhost for local development
-app.use("/sessions", proxy("http://localhost:3002"));
+app.use(
+  "/sessions",
+  proxy("http://localhost:3002", {
+    proxyReqPathResolver: (req) => {
+      console.log(
+        `🔗 Proxying session request: ${req.url} -> /api/sessions${req.url}`
+      );
+      return `/api/sessions${req.url}`;
+    },
+  })
+);
 app.use("/chat", proxy("http://localhost:3003"));
 app.use("/payment", proxy("http://localhost:3004"));
 app.use("/ai", proxy("http://localhost:3005"));

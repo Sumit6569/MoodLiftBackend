@@ -4,15 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch 'src/**/*.js' --exec 'node' src/index.js",
-    "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.js",
+    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify --external:express --external:cors --external:helmet --external:morgan --external:compression --external:express-rate-limit --external:dotenv --external:mongoose --external:bcryptjs --external:jsonwebtoken --external:uuid --external:crypto --external:nodemailer",
+    "clean": "node -e \"const fs = require('fs'); if (fs.existsSync('dist')) fs.rmSync('dist', { recursive: true, force: true });\"",
+    "start": "node dist/index.cjs",
+    "deploy": "npm run clean && npm run build && npm run start"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "esbuild": "^0.25.10"
   },
   "dependencies": {
     "compression": "^1.8.1",

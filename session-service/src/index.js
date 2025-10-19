@@ -7,9 +7,9 @@ import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import { connectDB } from "./config/mongodb.js";
 import sessionRoutes from "./routes/session.route.js";
-
+import mongoose from "mongoose";
 dotenv.config();
-
+const MONGODB_URI = process.env["MONGODB_URI"] || "mongodb://localhost:27017/moodlift";
 const app = express();
 const PORT = process.env.PORT || 3002;
 
@@ -60,6 +60,24 @@ process.on("SIGINT", () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
-  console.log(`Session service running on port ${PORT}`);
-});
+
+mongoose
+  .connect(MONGODB_URI, {
+    dbName: process.env["MONGODB_DB"] || "moodlift",
+    retryWrites: true,
+    w: "majority",
+  })
+  .then(() => {
+    console.log("✅ Connected to MongoDB Atlas");
+    app.listen(PORT, () => {
+      console.log(`🚀 Session Service running on port ${PORT}`);
+      console.log(
+        `📊 Environment: ${process.env["NODE_ENV"] || "development"}`
+      );
+      console.log(`🔗 API URL: http://localhost:${PORT}/api`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err.message);
+    process.exit(1);
+  });

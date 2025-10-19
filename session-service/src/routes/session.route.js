@@ -92,12 +92,18 @@ router.put("/:sessionId", async (req, res, next) => {
 
     if (
       updates.status &&
-      !["pending", "active", "completed"].includes(updates.status)
+      !["pending", "confirmed", "active", "completed", "cancelled"].includes(
+        updates.status
+      )
     ) {
       return res.status(400).json({
-        message: 'Status must be "pending", "active", or "completed"',
+        message:
+          'Status must be "pending", "confirmed", "active", "completed", or "cancelled"',
       });
     }
+
+    // Update the updatedAt timestamp
+    updates.updatedAt = new Date().toISOString();
 
     const updatedSession = await sessionRepo.updateSession(sessionId, updates);
 
