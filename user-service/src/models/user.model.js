@@ -86,7 +86,6 @@ export const userRepo = {
     return await UserModel.find({
       role: "listener",
       isApproved: true,
-      isEmailVerified: true,
     })
       .select("-passwordHash -passwordResetToken")
       .lean();

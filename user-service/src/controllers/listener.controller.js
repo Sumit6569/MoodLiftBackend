@@ -119,7 +119,7 @@ export const rejectListener = async (req, res, next) => {
 export const updateListenerProfile = async (req, res, next) => {
   try {
     const { userId } = req.params;
-    const { bio, expertise, hourlyRate } = req.body;
+    const { name, bio, expertise, hourlyRate } = req.body;
 
     if (!userId) {
       return res.status(400).json({
@@ -145,6 +145,8 @@ export const updateListenerProfile = async (req, res, next) => {
 
     // Validate updates
     const updates = { updatedAt: new Date() };
+
+    if (name !== undefined) updates.name = name;
 
     if (bio !== undefined) updates.bio = bio;
 
