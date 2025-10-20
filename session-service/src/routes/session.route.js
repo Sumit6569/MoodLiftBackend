@@ -87,7 +87,10 @@ router.post("/", async (req, res, next) => {
         ]);
 
         console.log("User details fetched:", user ? user.email : "NULL");
-        console.log("Listener details fetched:", listener ? listener.email : "NULL");
+        console.log(
+          "Listener details fetched:",
+          listener ? listener.email : "NULL"
+        );
 
         if (user && listener) {
           console.log("Sending email to listener:", listener.email);
@@ -232,7 +235,10 @@ router.put("/:sessionId", async (req, res, next) => {
           ]);
 
           console.log("User details fetched:", user ? user.email : "NULL");
-          console.log("Listener details fetched:", listener ? listener.email : "NULL");
+          console.log(
+            "Listener details fetched:",
+            listener ? listener.email : "NULL"
+          );
 
           if (user && listener) {
             console.log("Sending confirmation email to user:", user.email);
@@ -261,11 +267,11 @@ router.put("/:sessionId", async (req, res, next) => {
             console.error("Listener:", listener);
           }
         } catch (emailError) {
-          console.error("❌ Error sending session confirmation email:", emailError);
-          console.error("Error stack:", emailError.stack);
-            "Error sending session confirmation email:",
+          console.error(
+            "❌ Error sending session confirmation email:",
             emailError
           );
+          console.error("Error stack:", emailError.stack);
           // Don't fail the request if email fails
         }
       })();
