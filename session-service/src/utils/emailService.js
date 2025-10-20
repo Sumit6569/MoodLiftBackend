@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 
 // Create reusable transporter
-const createTransporter = () => {
+const createTransport = () => {
   console.log("📧 Creating email transporter...");
   console.log("EMAIL_USER:", process.env.EMAIL_USER ? "Set" : "Not set");
   console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Set" : "Not set");
@@ -17,7 +17,7 @@ const createTransporter = () => {
   }
 
   console.log("✅ Email credentials found, creating transporter...");
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE || "gmail",
     auth: {
       user: process.env.EMAIL_USER,
@@ -40,7 +40,7 @@ export const sendSessionRequestEmail = async (
     console.log("User Name:", userName);
     console.log("Session Details:", sessionDetails);
 
-    const transporter = createTransporter();
+    const transporter = createTransport();
     if (!transporter) {
       console.log(
         "❌ Email service not configured, skipping email notification"
@@ -215,7 +215,7 @@ export const sendSessionConfirmedEmail = async (
     console.log("Listener Name:", listenerName);
     console.log("Session Details:", sessionDetails);
 
-    const transporter = createTransporter();
+    const transporter = createTransport();
     if (!transporter) {
       console.log(
         "❌ Email service not configured, skipping email notification"
