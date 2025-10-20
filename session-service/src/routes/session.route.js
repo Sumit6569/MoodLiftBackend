@@ -76,13 +76,22 @@ router.post("/", async (req, res, next) => {
     // Send email notification to listener (non-blocking)
     (async () => {
       try {
+        console.log("📧 Starting email notification process...");
+        console.log("Fetching user and listener details...");
+        console.log("User ID:", userId);
+        console.log("Listener ID:", listenerId);
+
         const [user, listener] = await Promise.all([
           fetchUserDetails(userId),
           fetchListenerDetails(listenerId),
         ]);
 
+        console.log("User details fetched:", user ? user.email : "NULL");
+        console.log("Listener details fetched:", listener ? listener.email : "NULL");
+
         if (user && listener) {
-          await sendSessionRequestEmail(
+          console.log("Sending email to listener:", listener.email);
+          const emailResult = await sendSessionRequestEmail(
             listener.email,
             listener.name,
             user.name,
@@ -93,12 +102,18 @@ router.post("/", async (req, res, next) => {
               startTime: createdSession.startTime,
             }
           );
+          console.log("Email result:", emailResult);
           console.log(
-            `Session request email sent to listener: ${listener.email}`
+            `✅ Session request email sent to listener: ${listener.email}`
           );
+        } else {
+          console.error("❌ Missing user or listener details:");
+          console.error("User:", user);
+          console.error("Listener:", listener);
         }
       } catch (emailError) {
-        console.error("Error sending session request email:", emailError);
+        console.error("❌ Error sending session request email:", emailError);
+        console.error("Error stack:", emailError.stack);
         // Don't fail the request if email fails
       }
     })();
@@ -206,13 +221,22 @@ router.put("/:sessionId", async (req, res, next) => {
     if (updates.status === "confirmed") {
       (async () => {
         try {
+          console.log("📧 Starting confirmation email notification...");
+          console.log("Session ID:", updatedSession.sessionId);
+          console.log("User ID:", updatedSession.userId);
+          console.log("Listener ID:", updatedSession.listenerId);
+
           const [user, listener] = await Promise.all([
             fetchUserDetails(updatedSession.userId),
             fetchListenerDetails(updatedSession.listenerId),
           ]);
 
+          console.log("User details fetched:", user ? user.email : "NULL");
+          console.log("Listener details fetched:", listener ? listener.email : "NULL");
+
           if (user && listener) {
-            await sendSessionConfirmedEmail(
+            console.log("Sending confirmation email to user:", user.email);
+            const emailResult = await sendSessionConfirmedEmail(
               user.email,
               user.name,
               listener.name,
@@ -227,12 +251,18 @@ router.put("/:sessionId", async (req, res, next) => {
                 listenerInstructions: updatedSession.listenerInstructions,
               }
             );
+            console.log("Email result:", emailResult);
             console.log(
-              `Session confirmation email sent to user: ${user.email}`
+              `✅ Session confirmation email sent to user: ${user.email}`
             );
+          } else {
+            console.error("❌ Missing user or listener details:");
+            console.error("User:", user);
+            console.error("Listener:", listener);
           }
         } catch (emailError) {
-          console.error(
+          console.error("❌ Error sending session confirmation email:", emailError);
+          console.error("Error stack:", emailError.stack);
             "Error sending session confirmation email:",
             emailError
           );

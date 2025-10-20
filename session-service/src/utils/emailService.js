@@ -2,15 +2,22 @@ import nodemailer from "nodemailer";
 
 // Create reusable transporter
 const createTransporter = () => {
+  console.log("📧 Creating email transporter...");
+  console.log("EMAIL_USER:", process.env.EMAIL_USER ? "Set" : "Not set");
+  console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Set" : "Not set");
+  console.log("EMAIL_SERVICE:", process.env.EMAIL_SERVICE || "gmail");
+
   // Check if we have email configuration
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.warn(
-      "Email credentials not configured. Email notifications will be disabled."
+      "⚠️ Email credentials not configured. Email notifications will be disabled."
     );
+    console.warn("Please set EMAIL_USER and EMAIL_PASS environment variables");
     return null;
   }
 
-  return nodemailer.createTransport({
+  console.log("✅ Email credentials found, creating transporter...");
+  return nodemailer.createTransporter({
     service: process.env.EMAIL_SERVICE || "gmail",
     auth: {
       user: process.env.EMAIL_USER,
@@ -27,14 +34,23 @@ export const sendSessionRequestEmail = async (
   sessionDetails
 ) => {
   try {
+    console.log("📧 sendSessionRequestEmail called");
+    console.log("Listener Email:", listenerEmail);
+    console.log("Listener Name:", listenerName);
+    console.log("User Name:", userName);
+    console.log("Session Details:", sessionDetails);
+
     const transporter = createTransporter();
     if (!transporter) {
-      console.log("Email service not configured, skipping email notification");
+      console.log(
+        "❌ Email service not configured, skipping email notification"
+      );
       return { success: false, message: "Email service not configured" };
     }
 
     const { sessionId, type, cost, startTime } = sessionDetails;
 
+    console.log("📤 Preparing email...");
     const mailOptions = {
       from: `"MoodLift" <${process.env.EMAIL_USER}>`,
       to: listenerEmail,
@@ -171,11 +187,16 @@ export const sendSessionRequestEmail = async (
       `,
     };
 
+    console.log("📤 Sending email via SMTP...");
     const info = await transporter.sendMail(mailOptions);
-    console.log("Session request email sent:", info.messageId);
+    console.log("✅ Session request email sent successfully!");
+    console.log("Message ID:", info.messageId);
+    console.log("Response:", info.response);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("Error sending session request email:", error);
+    console.error("❌ Error sending session request email:", error);
+    console.error("Error code:", error.code);
+    console.error("Error message:", error.message);
     return { success: false, error: error.message };
   }
 };
@@ -188,9 +209,17 @@ export const sendSessionConfirmedEmail = async (
   sessionDetails
 ) => {
   try {
+    console.log("📧 sendSessionConfirmedEmail called");
+    console.log("User Email:", userEmail);
+    console.log("User Name:", userName);
+    console.log("Listener Name:", listenerName);
+    console.log("Session Details:", sessionDetails);
+
     const transporter = createTransporter();
     if (!transporter) {
-      console.log("Email service not configured, skipping email notification");
+      console.log(
+        "❌ Email service not configured, skipping email notification"
+      );
       return { success: false, message: "Email service not configured" };
     }
 
@@ -426,11 +455,16 @@ export const sendSessionConfirmedEmail = async (
       `,
     };
 
+    console.log("📤 Sending confirmation email via SMTP...");
     const info = await transporter.sendMail(mailOptions);
-    console.log("Session confirmed email sent:", info.messageId);
+    console.log("✅ Session confirmed email sent successfully!");
+    console.log("Message ID:", info.messageId);
+    console.log("Response:", info.response);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("Error sending session confirmed email:", error);
+    console.error("❌ Error sending session confirmed email:", error);
+    console.error("Error code:", error.code);
+    console.error("Error message:", error.message);
     return { success: false, error: error.message };
   }
 };
