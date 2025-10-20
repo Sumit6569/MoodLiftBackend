@@ -8,20 +8,45 @@ const sessionSchema = new mongoose.Schema(
     type: { type: String, enum: ["chat", "video"], required: true },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "active", "completed", "cancelled"],
+      enum: [
+        "pending",
+        "confirmed",
+        "active",
+        "completed",
+        "cancelled",
+        "rejected",
+      ],
       required: true,
       default: "pending",
     },
+
+    // Scheduling
+    scheduledDate: { type: String }, // ISO 8601 date
+    scheduledTime: { type: String }, // "14:00" format
+    duration: { type: Number, default: 60 }, // in minutes
+
+    // Session Details
     startTime: { type: String, required: true },
     endTime: { type: String },
     cost: { type: Number, required: true },
-    duration: { type: Number }, // in minutes
-    notes: { type: String },
-    listenerNotes: { type: String },
+
+    // Listener provided details
+    meetingLink: { type: String }, // External video call link (Zoom, Google Meet, etc)
+    listenerInstructions: { type: String }, // Instructions from listener to user
+    listenerNotes: { type: String }, // Private notes for listener
+
+    // User details
+    userNotes: { type: String }, // User's notes about what they want to discuss
+
+    // Feedback
     rating: { type: Number, min: 1, max: 5 },
     feedback: { type: String },
+
+    // Metadata
     createdAt: { type: String, default: () => new Date().toISOString() },
     updatedAt: { type: String, default: () => new Date().toISOString() },
+    confirmedAt: { type: String },
+    completedAt: { type: String },
   },
   {
     collection: "sessions",

@@ -92,18 +92,36 @@ router.put("/:sessionId", async (req, res, next) => {
 
     if (
       updates.status &&
-      !["pending", "confirmed", "active", "completed", "cancelled"].includes(
-        updates.status
-      )
+      ![
+        "pending",
+        "confirmed",
+        "active",
+        "completed",
+        "cancelled",
+        "rejected",
+      ].includes(updates.status)
     ) {
       return res.status(400).json({
         message:
-          'Status must be "pending", "confirmed", "active", "completed", or "cancelled"',
+          'Status must be "pending", "confirmed", "active", "completed", "cancelled", or "rejected"',
       });
     }
 
     // Update the updatedAt timestamp
     updates.updatedAt = new Date().toISOString();
+
+    // If status is being changed to confirmed, add confirmedAt timestamp
+    if (updates.status === "confirmed") {
+      updates.confirmedAt = new Date().toISOString();
+    }
+
+    // If status is being changed to completed, add completedAt timestamp
+    if (updates.status === "completed") {
+      updates.completedAt = new Date().toISOString();
+      if (!updates.endTime) {
+        updates.endTime = new Date().toISOString();
+      }
+    }
 
     const updatedSession = await sessionRepo.updateSession(sessionId, updates);
 
