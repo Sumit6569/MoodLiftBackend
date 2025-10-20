@@ -7,6 +7,7 @@ import {
   updateListenerProfile,
   getAllListeners,
   verifyListener,
+  getListenerById,
 } from "../controllers/listener.controller.js";
 import {
   authenticateToken,
@@ -18,6 +19,7 @@ const router = Router();
 
 // Public routes
 router.get("/approved", getApprovedListeners);
+router.get("/:userId", getListenerById); // Get single listener by ID
 
 // Admin routes
 router.get("/all", authenticateToken, requireAdmin, getAllListeners);

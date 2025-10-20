@@ -1,5 +1,42 @@
 import { userRepo } from "../models/user.model.js";
 
+// Get single listener by ID (public endpoint for session service)
+export const getListenerById = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const user = await userRepo.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Listener not found",
+      });
+    }
+
+    if (user.role !== "listener") {
+      return res.status(400).json({
+        success: false,
+        message: "User is not a listener",
+      });
+    }
+
+    res.json({
+      success: true,
+      listener: user,
+    });
+  } catch (error) {
+    console.error("Get listener by ID error:", error);
+    next(error);
+  }
+};
+
 // Get all approved listeners (public endpoint)
 export const getApprovedListeners = async (req, res, next) => {
   try {
