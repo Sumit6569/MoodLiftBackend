@@ -38,10 +38,10 @@ async function testEmailConfig() {
 
     console.log("Verifying SMTP connection...");
     await transporter.verify();
-    
+
     console.log("✅ SUCCESS: Email configuration is valid!");
     console.log("✅ SMTP connection verified!");
-    
+
     // Send test email
     console.log("\nSending test email...");
     const info = await transporter.sendMail({
@@ -57,7 +57,9 @@ async function testEmailConfig() {
             <div style="background: #f0fdf4; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #10b981;">
               <h3 style="margin-top: 0;">Configuration Details:</h3>
               <ul>
-                <li><strong>Email Service:</strong> ${process.env.EMAIL_SERVICE || "gmail"}</li>
+                <li><strong>Email Service:</strong> ${
+                  process.env.EMAIL_SERVICE || "gmail"
+                }</li>
                 <li><strong>Email User:</strong> ${process.env.EMAIL_USER}</li>
                 <li><strong>Status:</strong> ✅ Working</li>
               </ul>
@@ -85,17 +87,22 @@ async function testEmailConfig() {
     console.log("1. Check your spam/junk folder");
     console.log("2. Wait a few moments (can take 1-2 minutes)");
     console.log("3. Verify the email address is correct");
-    
   } catch (error) {
     console.error("\n❌ ERROR: Email configuration test failed!");
     console.error("Error details:", error.message);
-    
+
     if (error.code === "EAUTH") {
       console.log("\n🔧 Authentication Error - Possible fixes:");
-      console.log("1. Make sure you're using an App Password, not your regular password");
+      console.log(
+        "1. Make sure you're using an App Password, not your regular password"
+      );
       console.log("2. Enable 2-Factor Authentication on your Google account");
-      console.log("3. Generate a new App Password at: https://myaccount.google.com/apppasswords");
-      console.log("4. Make sure the password has NO SPACES (use: vqwqjfbxchudawsi)");
+      console.log(
+        "3. Generate a new App Password at: https://myaccount.google.com/apppasswords"
+      );
+      console.log(
+        "4. Make sure the password has NO SPACES (use: vqwqjfbxchudawsi)"
+      );
     } else if (error.code === "ECONNECTION") {
       console.log("\n🔧 Connection Error - Possible fixes:");
       console.log("1. Check your internet connection");
