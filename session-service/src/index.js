@@ -9,7 +9,8 @@ import { connectDB } from "./config/mongodb.js";
 import sessionRoutes from "./routes/session.route.js";
 import mongoose from "mongoose";
 dotenv.config();
-const MONGODB_URI = process.env["MONGODB_URI"] || "mongodb://localhost:27017/moodlift";
+const MONGODB_URI =
+  process.env["MONGODB_URI"] || "mongodb://localhost:27017/moodlift";
 const app = express();
 const PORT = process.env.PORT || 3002;
 
@@ -19,7 +20,23 @@ connectDB();
 // Middleware
 app.use(helmet());
 app.use(compression());
-app.use(cors());
+app.use(
+  cors({
+    origin:
+      process.env["NODE_ENV"] === "production"
+        ? [
+            "https://mood-lift-support.vercel.app",
+            process.env.FRONTEND_URL,
+          ].filter(Boolean)
+        : [
+            "http://localhost:3000",
+            "http://localhost:8080",
+            "https://mood-lift-support.vercel.app",
+            process.env.FRONTEND_URL,
+          ].filter(Boolean),
+    credentials: true,
+  })
+);
 app.use(morgan("combined"));
 
 // Rate limiting
@@ -47,8 +64,6 @@ app.use("/api/sessions", sessionRoutes);
 
 // Error handling middleware
 
-
-
 // Graceful shutdown
 process.on("SIGTERM", () => {
   console.log("SIGTERM received, shutting down gracefully");
@@ -59,7 +74,6 @@ process.on("SIGINT", () => {
   console.log("SIGINT received, shutting down gracefully");
   process.exit(0);
 });
-
 
 mongoose
   .connect(MONGODB_URI, {

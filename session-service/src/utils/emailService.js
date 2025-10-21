@@ -50,6 +50,7 @@ export async function sendSessionRequestEmail(
     console.log("Listener Email:", listenerEmail);
     console.log("Listener Name:", listenerName);
     console.log("User Name:", userName);
+    console.log("Session Details:", JSON.stringify(sessionDetails, null, 2));
 
     const fromEmail = initializeSendGrid();
 
@@ -64,6 +65,9 @@ export async function sendSessionRequestEmail(
       : "Not specified";
 
     const sessionTime = sessionDetails.preferredTime || "Not specified";
+
+    console.log("Formatted Date:", sessionDate);
+    console.log("Formatted Time:", sessionTime);
 
     // Create email message
     const msg = {
@@ -236,6 +240,7 @@ export async function sendSessionConfirmedEmail(
     console.log("User Email:", userEmail);
     console.log("User Name:", userName);
     console.log("Listener Name:", listenerName);
+    console.log("Session Details:", JSON.stringify(sessionDetails, null, 2));
 
     const fromEmail = initializeSendGrid();
 
@@ -272,6 +277,12 @@ export async function sendSessionConfirmedEmail(
     const meetingLink = sessionDetails.meetingLink || "#";
     const instructions =
       sessionDetails.listenerInstructions || "No special instructions";
+
+    console.log("Formatted Date:", scheduledDate);
+    console.log("Formatted Start Time:", scheduledTime);
+    console.log("Formatted End Time:", endTime);
+    console.log("Meeting Link:", meetingLink);
+    console.log("Instructions:", instructions);
 
     // Create email message
     const msg = {

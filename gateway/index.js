@@ -15,7 +15,18 @@ app.use(express.json());
 
 // CORS middleware
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:8080");
+  const allowedOrigins = [
+    "http://localhost:8080",
+    "http://localhost:3000",
+    "https://mood-lift-support.vercel.app",
+  ];
+
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+
   res.header(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, OPTIONS, PATCH"

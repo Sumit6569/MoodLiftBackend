@@ -31,8 +31,15 @@ app.use(
   cors({
     origin:
       process.env["NODE_ENV"] === "production"
-        ? ["https://your-frontend-domain.com"]
-        : ["http://localhost:3000", "http://localhost:8080"],
+        ? [
+            "https://mood-lift-support.vercel.app",
+            "https://your-frontend-domain.com",
+          ]
+        : [
+            "http://localhost:3000",
+            "http://localhost:8080",
+            "https://mood-lift-support.vercel.app", // Allow Vercel in dev too
+          ],
     credentials: true,
   })
 );
