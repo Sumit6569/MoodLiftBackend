@@ -1,6 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcryptjs";
 import { userRepo } from "../models/user.model.js";
+import {
+  uploadToCloudinary,
+  deleteImage,
+  extractPublicId,
+} from "../config/cloudinary.js";
 
 export const createUser = async (req, res, next) => {
   try {
@@ -86,5 +91,66 @@ export const deleteUser = async (req, res, next) => {
     return res.status(204).send();
   } catch (err) {
     return next(err);
+  }
+};
+
+export const uploadProfilePicture = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    // Get user to check if they exist
+    const user = await userRepo.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Delete old profile picture from Cloudinary if it exists
+    if (user.profilePicture) {
+      try {
+        const publicId = extractPublicId(user.profilePicture);
+        if (publicId) {
+          await deleteImage(publicId);
+          console.log("Old profile picture deleted:", publicId);
+        }
+      } catch (error) {
+        console.error("Error deleting old profile picture:", error);
+        // Continue even if deletion fails
+      }
+    }
+
+    // Upload new image to Cloudinary
+    const result = await uploadToCloudinary(
+      req.file.buffer,
+      "moodlift/profiles"
+    );
+
+    // Update user with new profile picture URL
+    const updatedUser = await userRepo.updateUser(userId, {
+      profilePicture: result.secure_url,
+      updatedAt: new Date(),
+    });
+
+    const { passwordHash: _, ...safeUser } = updatedUser;
+
+    res.json({
+      success: true,
+      message: "Profile picture uploaded successfully",
+      user: safeUser,
+      imageUrl: result.secure_url,
+    });
+  } catch (error) {
+    console.error("Upload profile picture error:", error);
+    next(error);
   }
 };

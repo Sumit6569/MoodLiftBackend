@@ -1,4 +1,5 @@
 import { userRepo } from "../models/user.model.js";
+import { sendListenerApprovalEmail } from "../utils/emailService.js";
 
 // Get single listener by ID (public endpoint for session service)
 export const getListenerById = async (req, res, next) => {
@@ -96,6 +97,26 @@ export const approveListener = async (req, res, next) => {
       isApproved: true,
       updatedAt: new Date(),
     });
+
+    // Send approval email to listener (non-blocking)
+    (async () => {
+      try {
+        console.log(
+          "📧 Sending approval email to listener:",
+          updatedUser.email
+        );
+        const emailResult = await sendListenerApprovalEmail(
+          updatedUser.email,
+          updatedUser.name
+        );
+        console.log("Email result:", emailResult);
+        console.log(`✅ Approval email sent to listener: ${updatedUser.email}`);
+      } catch (emailError) {
+        console.error("❌ Error sending approval email:", emailError);
+        console.error("Error stack:", emailError.stack);
+        // Don't fail the request if email fails
+      }
+    })();
 
     res.json({
       success: true,

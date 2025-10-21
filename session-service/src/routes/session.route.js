@@ -228,6 +228,10 @@ router.put("/:sessionId", async (req, res, next) => {
           console.log("Session ID:", updatedSession.sessionId);
           console.log("User ID:", updatedSession.userId);
           console.log("Listener ID:", updatedSession.listenerId);
+          console.log(
+            "🔍 Updated Session Full Object:",
+            JSON.stringify(updatedSession, null, 2)
+          );
 
           const [user, listener] = await Promise.all([
             fetchUserDetails(updatedSession.userId),
