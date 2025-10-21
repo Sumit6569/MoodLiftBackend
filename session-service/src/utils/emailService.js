@@ -1,475 +1,453 @@
-import nodemailer from "nodemailer";
+/**
+ * Email Service using SendGrid (HTTP API - works on all cloud platforms)
+ *
+ * To use this instead of Gmail SMTP:
+ * 1. Rename emailService.js to emailService.gmail.js
+ * 2. Rename this file to emailService.js
+ * 3. Install SendGrid: npm install @sendgrid/mail
+ * 4. Set SENDGRID_API_KEY and FROM_EMAIL in .env
+ */
 
-// Create reusable transporter
-const createTransport = () => {
-  console.log("📧 Creating email transporter...");
-  console.log("EMAIL_USER:", process.env.EMAIL_USER ? "Set" : "Not set");
-  console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Set" : "Not set");
-  console.log("EMAIL_SERVICE:", process.env.EMAIL_SERVICE || "gmail");
+import sgMail from "@sendgrid/mail";
 
-  // Check if we have email configuration
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn(
-      "⚠️ Email credentials not configured. Email notifications will be disabled."
-    );
-    console.warn("Please set EMAIL_USER and EMAIL_PASS environment variables");
-    return null;
+// Initialize SendGrid
+const initializeSendGrid = () => {
+  console.log("📧 Initializing SendGrid...");
+
+  const apiKey = process.env.SENDGRID_API_KEY;
+  const fromEmail = process.env.FROM_EMAIL;
+
+  console.log("SENDGRID_API_KEY:", apiKey ? "Set ✓" : "NOT SET ✗");
+  console.log("FROM_EMAIL:", fromEmail || "NOT SET ✗");
+
+  if (!apiKey) {
+    console.error("❌ SENDGRID_API_KEY is not set!");
+    throw new Error("SendGrid API key is required");
   }
 
-  console.log("✅ Email credentials found, creating transporter...");
-  return nodemailer.createTransport({
-    service: process.env.EMAIL_SERVICE || "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+  if (!fromEmail) {
+    console.error("❌ FROM_EMAIL is not set!");
+    throw new Error("FROM_EMAIL is required");
+  }
+
+  sgMail.setApiKey(apiKey);
+  console.log("✅ SendGrid initialized successfully!");
+
+  return fromEmail;
 };
 
-// Send email for new session request to listener
-export const sendSessionRequestEmail = async (
+/**
+ * Send session request email to listener
+ */
+export async function sendSessionRequestEmail(
   listenerEmail,
   listenerName,
   userName,
   sessionDetails
-) => {
+) {
   try {
     console.log("📧 sendSessionRequestEmail called");
     console.log("Listener Email:", listenerEmail);
     console.log("Listener Name:", listenerName);
     console.log("User Name:", userName);
-    console.log("Session Details:", sessionDetails);
 
-    const transporter = createTransport();
-    if (!transporter) {
-      console.log(
-        "❌ Email service not configured, skipping email notification"
-      );
-      return { success: false, message: "Email service not configured" };
-    }
+    const fromEmail = initializeSendGrid();
 
-    const { sessionId, type, cost, startTime } = sessionDetails;
-
-    console.log("📤 Preparing email...");
-    const mailOptions = {
-      from: `"MoodLift" <${process.env.EMAIL_USER}>`,
-      to: listenerEmail,
-      subject: "🔔 New Session Request - MoodLift",
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <style>
-              body {
-                font-family: Arial, sans-serif;
-                line-height: 1.6;
-                color: #333;
-              }
-              .container {
-                max-width: 600px;
-                margin: 0 auto;
-                padding: 20px;
-                background-color: #f9f9f9;
-              }
-              .header {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 30px;
-                text-align: center;
-                border-radius: 8px 8px 0 0;
-              }
-              .content {
-                background: white;
-                padding: 30px;
-                border-radius: 0 0 8px 8px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              }
-              .session-details {
-                background: #f5f5f5;
-                padding: 20px;
-                border-radius: 8px;
-                margin: 20px 0;
-              }
-              .detail-row {
-                display: flex;
-                justify-content: space-between;
-                padding: 8px 0;
-                border-bottom: 1px solid #e0e0e0;
-              }
-              .detail-row:last-child {
-                border-bottom: none;
-              }
-              .label {
-                font-weight: bold;
-                color: #667eea;
-              }
-              .button {
-                display: inline-block;
-                padding: 12px 30px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                text-decoration: none;
-                border-radius: 5px;
-                margin: 20px 0;
-                text-align: center;
-              }
-              .footer {
-                text-align: center;
-                margin-top: 20px;
-                color: #666;
-                font-size: 12px;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1>💜 New Session Request</h1>
-              </div>
-              <div class="content">
-                <p>Hello <strong>${listenerName}</strong>,</p>
-                
-                <p>You have received a new session request from <strong>${userName}</strong>.</p>
-                
-                <div class="session-details">
-                  <h3 style="margin-top: 0; color: #667eea;">📋 Session Details</h3>
-                  <div class="detail-row">
-                    <span class="label">Session ID:</span>
-                    <span>${sessionId.substring(0, 8)}...</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="label">Client:</span>
-                    <span>${userName}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="label">Session Type:</span>
-                    <span>${
-                      type === "video" ? "🎥 Video Call" : "💬 Chat"
-                    }</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="label">Cost:</span>
-                    <span>$${cost}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="label">Requested At:</span>
-                    <span>${new Date(startTime).toLocaleString()}</span>
-                  </div>
-                </div>
-                
-                <p><strong>Action Required:</strong> Please log in to your listener dashboard to review and confirm this session request. You'll need to provide:</p>
-                <ul>
-                  <li>📅 Scheduled date and time</li>
-                  <li>⏱️ Session duration</li>
-                  <li>🔗 Meeting link (for video sessions)</li>
-                  <li>📝 Any instructions for the client</li>
-                </ul>
-                
-                <div style="text-align: center;">
-                  <a href="${
-                    process.env.FRONTEND_URL || "http://localhost:3000"
-                  }/listener-dashboard" class="button">
-                    View Session Request
-                  </a>
-                </div>
-                
-                <p style="color: #666; font-size: 14px; margin-top: 30px;">
-                  <em>Please respond to this request as soon as possible to provide the best service to your clients.</em>
-                </p>
-              </div>
-              <div class="footer">
-                <p>This is an automated email from MoodLift. Please do not reply to this email.</p>
-                <p>&copy; 2025 MoodLift. All rights reserved.</p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `,
-    };
-
-    console.log("📤 Sending email via SMTP...");
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Session request email sent successfully!");
-    console.log("Message ID:", info.messageId);
-    console.log("Response:", info.response);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error("❌ Error sending session request email:", error);
-    console.error("Error code:", error.code);
-    console.error("Error message:", error.message);
-    return { success: false, error: error.message };
-  }
-};
-
-// Send email when session is confirmed to user
-export const sendSessionConfirmedEmail = async (
-  userEmail,
-  userName,
-  listenerName,
-  sessionDetails
-) => {
-  try {
-    console.log("📧 sendSessionConfirmedEmail called");
-    console.log("User Email:", userEmail);
-    console.log("User Name:", userName);
-    console.log("Listener Name:", listenerName);
-    console.log("Session Details:", sessionDetails);
-
-    const transporter = createTransport();
-    if (!transporter) {
-      console.log(
-        "❌ Email service not configured, skipping email notification"
-      );
-      return { success: false, message: "Email service not configured" };
-    }
-
-    const {
-      sessionId,
-      type,
-      cost,
-      scheduledStartTime,
-      scheduledEndTime,
-      duration,
-      meetingLink,
-      listenerInstructions,
-    } = sessionDetails;
-
-    const scheduledDate = scheduledStartTime
-      ? new Date(scheduledStartTime).toLocaleDateString("en-US", {
+    // Format date and time
+    const sessionDate = sessionDetails.preferredDate
+      ? new Date(sessionDetails.preferredDate).toLocaleDateString("en-US", {
           weekday: "long",
           year: "numeric",
           month: "long",
           day: "numeric",
         })
-      : "To be determined";
+      : "Not specified";
 
-    const scheduledTime = scheduledStartTime
-      ? new Date(scheduledStartTime).toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : "To be determined";
+    const sessionTime = sessionDetails.preferredTime || "Not specified";
 
-    const mailOptions = {
-      from: `"MoodLift" <${process.env.EMAIL_USER}>`,
-      to: userEmail,
-      subject: "✅ Your Session Has Been Confirmed - MoodLift",
+    // Create email message
+    const msg = {
+      to: listenerEmail,
+      from: {
+        email: fromEmail,
+        name: "MoodLift Support",
+      },
+      subject: `New Session Request from ${userName}`,
       html: `
         <!DOCTYPE html>
         <html>
-          <head>
-            <style>
-              body {
-                font-family: Arial, sans-serif;
-                line-height: 1.6;
-                color: #333;
-              }
-              .container {
-                max-width: 600px;
-                margin: 0 auto;
-                padding: 20px;
-                background-color: #f9f9f9;
-              }
-              .header {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                color: white;
-                padding: 30px;
-                text-align: center;
-                border-radius: 8px 8px 0 0;
-              }
-              .content {
-                background: white;
-                padding: 30px;
-                border-radius: 0 0 8px 8px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              }
-              .session-details {
-                background: #f0fdf4;
-                padding: 20px;
-                border-radius: 8px;
-                margin: 20px 0;
-                border-left: 4px solid #10b981;
-              }
-              .detail-row {
-                display: flex;
-                justify-content: space-between;
-                padding: 8px 0;
-                border-bottom: 1px solid #d1fae5;
-              }
-              .detail-row:last-child {
-                border-bottom: none;
-              }
-              .label {
-                font-weight: bold;
-                color: #059669;
-              }
-              .meeting-link {
-                background: #10b981;
-                color: white;
-                padding: 15px 30px;
-                text-decoration: none;
-                border-radius: 5px;
-                display: inline-block;
-                margin: 20px 0;
-                font-weight: bold;
-              }
-              .instructions {
-                background: #fef3c7;
-                padding: 15px;
-                border-radius: 8px;
-                margin: 20px 0;
-                border-left: 4px solid #f59e0b;
-              }
-              .button {
-                display: inline-block;
-                padding: 12px 30px;
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                color: white;
-                text-decoration: none;
-                border-radius: 5px;
-                margin: 20px 0;
-                text-align: center;
-              }
-              .footer {
-                text-align: center;
-                margin-top: 20px;
-                color: #666;
-                font-size: 12px;
-              }
-              .highlight {
-                background: #fef3c7;
-                padding: 2px 6px;
-                border-radius: 3px;
-                font-weight: bold;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1>✅ Session Confirmed!</h1>
-              </div>
-              <div class="content">
-                <p>Hello <strong>${userName}</strong>,</p>
-                
-                <p>Great news! Your session with <strong>${listenerName}</strong> has been confirmed.</p>
-                
-                <div class="session-details">
-                  <h3 style="margin-top: 0; color: #059669;">📋 Session Details</h3>
-                  <div class="detail-row">
-                    <span class="label">Session ID:</span>
-                    <span>${sessionId.substring(0, 8)}...</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="label">Listener:</span>
-                    <span>${listenerName}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="label">Session Type:</span>
-                    <span>${
-                      type === "video" ? "🎥 Video Call" : "💬 Chat"
-                    }</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="label">Scheduled Date:</span>
-                    <span>${scheduledDate}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="label">Scheduled Time:</span>
-                    <span>${scheduledTime}</span>
-                  </div>
-                  ${
-                    duration
-                      ? `<div class="detail-row">
-                    <span class="label">Duration:</span>
-                    <span>${duration} minutes</span>
-                  </div>`
-                      : ""
-                  }
-                  <div class="detail-row">
-                    <span class="label">Cost:</span>
-                    <span>$${cost}</span>
-                  </div>
-                </div>
-                
-                ${
-                  meetingLink
-                    ? `
-                  <div style="text-align: center; margin: 30px 0;">
-                    <p style="margin-bottom: 10px;"><strong>🔗 Join Your Session:</strong></p>
-                    <a href="${meetingLink}" class="meeting-link">
-                      Click Here to Join Meeting
-                    </a>
-                    <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                      Link: <a href="${meetingLink}" style="color: #10b981;">${meetingLink}</a>
-                    </p>
-                  </div>
-                `
-                    : ""
-                }
-                
-                ${
-                  listenerInstructions
-                    ? `
-                  <div class="instructions">
-                    <h4 style="margin-top: 0; color: #f59e0b;">📝 Instructions from ${listenerName}:</h4>
-                    <p style="margin: 0; white-space: pre-wrap;">${listenerInstructions}</p>
-                  </div>
-                `
-                    : ""
-                }
-                
-                <div style="background: #eff6ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                  <h4 style="margin-top: 0; color: #2563eb;">💡 Before Your Session:</h4>
-                  <ul style="margin: 0;">
-                    <li>Find a quiet, comfortable space</li>
-                    ${
-                      type === "video"
-                        ? "<li>Test your camera and microphone</li>"
-                        : ""
-                    }
-                    <li>Have a glass of water nearby</li>
-                    <li>Prepare any topics you'd like to discuss</li>
-                  </ul>
-                </div>
-                
-                <div style="text-align: center;">
-                  <a href="${
-                    process.env.FRONTEND_URL || "http://localhost:3000"
-                  }/dashboard" class="button">
-                    View in Dashboard
-                  </a>
-                </div>
-                
-                <p style="color: #666; font-size: 14px; margin-top: 30px;">
-                  <em>If you need to reschedule or have any questions, please contact support.</em>
-                </p>
-              </div>
-              <div class="footer">
-                <p>This is an automated email from MoodLift. Please do not reply to this email.</p>
-                <p>&copy; 2025 MoodLift. All rights reserved.</p>
-              </div>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>New Session Request</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 40px 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+              <h1 style="margin: 0; color: white; font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                🎯 New Session Request
+              </h1>
+              <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
+                Someone needs your support
+              </p>
             </div>
-          </body>
+
+            <!-- Content -->
+            <div style="padding: 40px 30px;">
+              
+              <!-- Greeting -->
+              <p style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748; line-height: 1.6;">
+                Hi <strong style="color: #667eea;">${listenerName}</strong>,
+              </p>
+
+              <p style="margin: 0 0 30px 0; font-size: 16px; color: #4a5568; line-height: 1.6;">
+                You have received a new session request from <strong>${userName}</strong>. 
+                Please review the details below and respond as soon as possible.
+              </p>
+
+              <!-- Session Details Card -->
+              <div style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); border-left: 4px solid #667eea; padding: 25px; border-radius: 12px; margin-bottom: 30px;">
+                <h2 style="margin: 0 0 20px 0; font-size: 20px; color: #2d3748; font-weight: 600;">
+                  📋 Session Details
+                </h2>
+
+                <div style="margin-bottom: 15px;">
+                  <div style="display: inline-block; min-width: 140px; color: #718096; font-size: 14px; font-weight: 600;">
+                    👤 User Name:
+                  </div>
+                  <span style="color: #2d3748; font-size: 15px; font-weight: 500;">
+                    ${userName}
+                  </span>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                  <div style="display: inline-block; min-width: 140px; color: #718096; font-size: 14px; font-weight: 600;">
+                    📅 Preferred Date:
+                  </div>
+                  <span style="color: #2d3748; font-size: 15px; font-weight: 500;">
+                    ${sessionDate}
+                  </span>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                  <div style="display: inline-block; min-width: 140px; color: #718096; font-size: 14px; font-weight: 600;">
+                    ⏰ Preferred Time:
+                  </div>
+                  <span style="color: #2d3748; font-size: 15px; font-weight: 500;">
+                    ${sessionTime}
+                  </span>
+                </div>
+
+                ${
+                  sessionDetails.reason
+                    ? `
+                <div>
+                  <div style="color: #718096; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                    💭 Reason:
+                  </div>
+                  <div style="background: white; padding: 15px; border-radius: 8px; color: #2d3748; font-size: 15px; line-height: 1.6; border: 1px solid #e2e8f0;">
+                    ${sessionDetails.reason}
+                  </div>
+                </div>
+                `
+                    : ""
+                }
+              </div>
+
+              <!-- CTA Button -->
+              <div style="text-align: center; margin: 35px 0;">
+                <a href="${
+                  process.env.FRONTEND_URL || "http://localhost:3000"
+                }/dashboard?tab=sessions" 
+                   style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 16px 40px; border-radius: 50px; font-weight: 600; font-size: 16px; box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4); transition: all 0.3s ease;">
+                  Review & Confirm Session →
+                </a>
+              </div>
+
+              <!-- Instructions -->
+              <div style="background: #fffaf0; border: 1px solid #fbd38d; border-radius: 12px; padding: 20px; margin-top: 30px;">
+                <div style="font-size: 16px; color: #744210; font-weight: 600; margin-bottom: 10px;">
+                  📝 Next Steps:
+                </div>
+                <ol style="margin: 0; padding-left: 20px; color: #744210; font-size: 14px; line-height: 1.8;">
+                  <li>Review the session request details</li>
+                  <li>Click the button above to access your dashboard</li>
+                  <li>Confirm the session with a meeting link and time</li>
+                  <li>The user will be notified automatically</li>
+                </ol>
+              </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div style="background: #f7fafc; padding: 25px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+              <p style="margin: 0 0 10px 0; color: #718096; font-size: 14px;">
+                Thank you for being part of the MoodLift community! 💜
+              </p>
+              <p style="margin: 0; color: #a0aec0; font-size: 12px;">
+                MoodLift Support Platform • Helping people connect and heal
+              </p>
+            </div>
+
+          </div>
+        </body>
         </html>
       `,
     };
 
-    console.log("📤 Sending confirmation email via SMTP...");
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Session confirmed email sent successfully!");
-    console.log("Message ID:", info.messageId);
-    console.log("Response:", info.response);
-    return { success: true, messageId: info.messageId };
+    console.log("📤 Sending email via SendGrid HTTP API...");
+
+    // SendGrid returns a response array
+    const [response] = await sgMail.send(msg);
+
+    console.log("✅ Session request email sent successfully via SendGrid!");
+    console.log("Status Code:", response.statusCode);
+    console.log("Response:", response.statusMessage || "OK");
+
+    return {
+      success: true,
+      statusCode: response.statusCode,
+      provider: "SendGrid",
+    };
   } catch (error) {
-    console.error("❌ Error sending session confirmed email:", error);
-    console.error("Error code:", error.code);
-    console.error("Error message:", error.message);
+    console.error("❌ Error sending session request email:", error);
+
+    if (error.response) {
+      console.error("SendGrid Error Response:", error.response.body);
+    }
+
     return { success: false, error: error.message };
   }
-};
+}
 
-export default {
-  sendSessionRequestEmail,
-  sendSessionConfirmedEmail,
-};
+/**
+ * Send session confirmation email to user
+ */
+export async function sendSessionConfirmedEmail(
+  userEmail,
+  userName,
+  listenerName,
+  sessionDetails
+) {
+  try {
+    console.log("📧 sendSessionConfirmedEmail called");
+    console.log("User Email:", userEmail);
+    console.log("User Name:", userName);
+    console.log("Listener Name:", listenerName);
+
+    const fromEmail = initializeSendGrid();
+
+    // Format date and time
+    const scheduledDate = sessionDetails.scheduledStartTime
+      ? new Date(sessionDetails.scheduledStartTime).toLocaleDateString(
+          "en-US",
+          {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }
+        )
+      : "Not specified";
+
+    const scheduledTime = sessionDetails.scheduledStartTime
+      ? new Date(sessionDetails.scheduledStartTime).toLocaleTimeString(
+          "en-US",
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          }
+        )
+      : "Not specified";
+
+    const endTime = sessionDetails.scheduledEndTime
+      ? new Date(sessionDetails.scheduledEndTime).toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "Not specified";
+
+    const meetingLink = sessionDetails.meetingLink || "#";
+    const instructions =
+      sessionDetails.listenerInstructions || "No special instructions";
+
+    // Create email message
+    const msg = {
+      to: userEmail,
+      from: {
+        email: fromEmail,
+        name: "MoodLift Support",
+      },
+      subject: `Session Confirmed with ${listenerName} ✓`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Session Confirmed</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 40px 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); padding: 40px 30px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+              <h1 style="margin: 0; color: white; font-size: 32px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                Session Confirmed!
+              </h1>
+              <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
+                Your session has been scheduled
+              </p>
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 40px 30px;">
+              
+              <!-- Greeting -->
+              <p style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748; line-height: 1.6;">
+                Hi <strong style="color: #667eea;">${userName}</strong>,
+              </p>
+
+              <p style="margin: 0 0 30px 0; font-size: 16px; color: #4a5568; line-height: 1.6;">
+                Great news! <strong>${listenerName}</strong> has confirmed your session request. 
+                Here are your session details:
+              </p>
+
+              <!-- Session Details Card -->
+              <div style="background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%); border-left: 4px solid #48bb78; padding: 25px; border-radius: 12px; margin-bottom: 30px;">
+                <h2 style="margin: 0 0 20px 0; font-size: 20px; color: #2d3748; font-weight: 600;">
+                  📋 Session Details
+                </h2>
+
+                <div style="margin-bottom: 15px;">
+                  <div style="display: inline-block; min-width: 140px; color: #718096; font-size: 14px; font-weight: 600;">
+                    👨‍⚕️ Listener:
+                  </div>
+                  <span style="color: #2d3748; font-size: 15px; font-weight: 500;">
+                    ${listenerName}
+                  </span>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                  <div style="display: inline-block; min-width: 140px; color: #718096; font-size: 14px; font-weight: 600;">
+                    📅 Date:
+                  </div>
+                  <span style="color: #2d3748; font-size: 15px; font-weight: 500;">
+                    ${scheduledDate}
+                  </span>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                  <div style="display: inline-block; min-width: 140px; color: #718096; font-size: 14px; font-weight: 600;">
+                    ⏰ Time:
+                  </div>
+                  <span style="color: #2d3748; font-size: 15px; font-weight: 500;">
+                    ${scheduledTime} - ${endTime}
+                  </span>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                  <div style="display: inline-block; min-width: 140px; color: #718096; font-size: 14px; font-weight: 600;">
+                    🔗 Meeting Link:
+                  </div>
+                  <a href="${meetingLink}" 
+                     style="color: #667eea; font-size: 15px; font-weight: 500; text-decoration: none; word-break: break-all;">
+                    ${meetingLink}
+                  </a>
+                </div>
+
+                <div>
+                  <div style="color: #718096; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                    📝 Instructions from ${listenerName}:
+                  </div>
+                  <div style="background: white; padding: 15px; border-radius: 8px; color: #2d3748; font-size: 15px; line-height: 1.6; border: 1px solid #c6f6d5;">
+                    ${instructions}
+                  </div>
+                </div>
+              </div>
+
+              <!-- CTA Button -->
+              <div style="text-align: center; margin: 35px 0;">
+                <a href="${meetingLink}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; text-decoration: none; padding: 16px 40px; border-radius: 50px; font-weight: 600; font-size: 16px; box-shadow: 0 10px 25px rgba(72, 187, 120, 0.4); transition: all 0.3s ease;">
+                  Join Meeting at Scheduled Time →
+                </a>
+              </div>
+
+              <!-- Tips -->
+              <div style="background: #ebf8ff; border: 1px solid #90cdf4; border-radius: 12px; padding: 20px; margin-top: 30px;">
+                <div style="font-size: 16px; color: #2c5282; font-weight: 600; margin-bottom: 10px;">
+                  💡 Tips for Your Session:
+                </div>
+                <ul style="margin: 0; padding-left: 20px; color: #2c5282; font-size: 14px; line-height: 1.8;">
+                  <li>Find a quiet, private space for your session</li>
+                  <li>Test your internet connection and camera beforehand</li>
+                  <li>Join 5 minutes early to check your setup</li>
+                  <li>Have a glass of water nearby</li>
+                  <li>Be open and honest during your session</li>
+                </ul>
+              </div>
+
+              <!-- Calendar Reminder -->
+              <div style="background: #fffaf0; border: 1px solid #fbd38d; border-radius: 12px; padding: 20px; margin-top: 20px;">
+                <div style="font-size: 14px; color: #744210; text-align: center;">
+                  ⏰ <strong>Set a reminder:</strong> We recommend adding this session to your calendar to ensure you don't miss it!
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div style="background: #f7fafc; padding: 25px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+              <p style="margin: 0 0 10px 0; color: #718096; font-size: 14px;">
+                We're here to support you on your journey 💜
+              </p>
+              <p style="margin: 0 0 15px 0; color: #a0aec0; font-size: 12px;">
+                MoodLift Support Platform • Helping people connect and heal
+              </p>
+              <p style="margin: 0; color: #a0aec0; font-size: 12px;">
+                Need to reschedule? Visit your 
+                <a href="${
+                  process.env.FRONTEND_URL || "http://localhost:3000"
+                }/dashboard?tab=sessions" 
+                   style="color: #667eea; text-decoration: none;">
+                  dashboard
+                </a>
+              </p>
+            </div>
+
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    console.log("📤 Sending confirmation email via SendGrid HTTP API...");
+
+    // SendGrid returns a response array
+    const [response] = await sgMail.send(msg);
+
+    console.log(
+      "✅ Session confirmation email sent successfully via SendGrid!"
+    );
+    console.log("Status Code:", response.statusCode);
+    console.log("Response:", response.statusMessage || "OK");
+
+    return {
+      success: true,
+      statusCode: response.statusCode,
+      provider: "SendGrid",
+    };
+  } catch (error) {
+    console.error("❌ Error sending session confirmation email:", error);
+
+    if (error.response) {
+      console.error("SendGrid Error Response:", error.response.body);
+    }
+
+    return { success: false, error: error.message };
+  }
+}
