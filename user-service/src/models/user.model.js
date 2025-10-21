@@ -94,7 +94,7 @@ export const userRepo = {
     return await UserModel.find({
       role: "listener",
       isApproved: false,
-      isEmailVerified: true,
+      // Removed isEmailVerified requirement to show all pending listeners
     })
       .select("-passwordHash -passwordResetToken")
       .lean();
