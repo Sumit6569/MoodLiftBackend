@@ -19,11 +19,13 @@ const router = Router();
 
 // Public routes
 router.get("/approved", getApprovedListeners);
-router.get("/:userId", getListenerById); // Get single listener by ID
 
-// Admin routes
+// Admin routes (MUST come before /:userId to avoid route conflicts)
 router.get("/all", authenticateToken, requireAdmin, getAllListeners);
 router.get("/pending", authenticateToken, requireAdmin, getPendingListeners);
+
+// Get single listener by ID (MUST come after specific routes)
+router.get("/:userId", getListenerById);
 router.post(
   "/:userId/approve",
   authenticateToken,
