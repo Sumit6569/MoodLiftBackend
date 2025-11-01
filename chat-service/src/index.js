@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import { connectDB } from "./config/mongodb.js";
 import chatRoutes from "./routes/chat.route.js";
+import communityRoutes from "./routes/community.route.js";
 
 dotenv.config();
 
@@ -43,10 +44,18 @@ app.get("/health", (req, res) => {
 });
 
 // Routes
-app.use("/api/messages", chatRoutes);
+app.use("/api/messages", chatRoutes); // Legacy route
+app.use("/api/v1/chat", chatRoutes); // New advanced chat routes
+app.use("/api/v1/community", communityRoutes); // Community posts & feed
 
 // Error handling middleware
-
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal server error",
+  });
+});
 
 // Graceful shutdown
 process.on("SIGTERM", () => {

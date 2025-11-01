@@ -43,10 +43,17 @@ app.get("/health", (req, res) => {
 });
 
 // Routes
-app.use("/api/payments", paymentRoutes);
+app.use("/api/payments", paymentRoutes); // Legacy route
+app.use("/api/v1/payments", paymentRoutes); // New advanced routes
 
 // Error handling middleware
-
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal server error",
+  });
+});
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
