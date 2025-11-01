@@ -10,6 +10,7 @@ import mongoose from "mongoose";
 import userRoute from "./routes/user.route.js";
 import authRoute from "./routes/auth.route.js";
 import listenerRoute from "./routes/listener.route.js";
+import moodRoute from "./routes/mood.route.js";
 
 // Load environment variables
 dotenv.config();
@@ -62,6 +63,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/v1/users", userRoute);
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/listeners", listenerRoute);
+app.use("/api/v1/mood", moodRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
