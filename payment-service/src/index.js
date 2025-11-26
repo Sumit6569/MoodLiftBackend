@@ -6,9 +6,21 @@ import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import { connectDB } from "./config/mongodb.js";
+import { validatePayPalConfig } from "./config/paypal.config.js";
 import paymentRoutes from "./routes/payment.route.js";
+import paypalRoutes from "./routes/paypal.route.js";
+import subscriptionRoutes from "./routes/subscription.route.js";
+import { handlePayPalWebhook } from "./controllers/webhook.controller.js";
 
 dotenv.config();
+
+// Validate PayPal configuration on startup
+try {
+  validatePayPalConfig();
+  console.log("✅ PayPal configuration validated");
+} catch (error) {
+  console.warn("⚠️ PayPal configuration warning:", error.message);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3004;
@@ -44,7 +56,18 @@ app.get("/health", (req, res) => {
 
 // Routes
 app.use("/api/payments", paymentRoutes); // Legacy route
-app.use("/api/v1/payments", paymentRoutes); // New advanced routes
+app.use("/api/v1/payments", paymentRoutes); // Legacy payments
+
+// PayPal Routes
+app.use("/api/v1/paypal", paypalRoutes); // PayPal orders and transactions
+app.use("/api/v1/subscriptions", subscriptionRoutes); // Subscription management
+
+// Webhook endpoint (PayPal webhooks)
+app.post(
+  "/api/v1/webhooks/paypal",
+  express.raw({ type: "application/json" }),
+  handlePayPalWebhook
+);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
