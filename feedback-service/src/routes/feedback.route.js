@@ -38,6 +38,7 @@ router.post("/", async (req, res, next) => {
     const feedback = {
       feedbackId: uuidv4(),
       userId,
+      sessionId: sessionId || null,
       listenerId: listenerId || null,
       rating,
       comments: feedbackComment,
@@ -77,11 +78,11 @@ router.get("/:feedbackId", async (req, res, next) => {
 router.get("/user/:userId", async (req, res, next) => {
   try {
     const { userId } = req.params;
-    const feedback = await feedbackRepo.getFeedbackByUserId(userId);
+    const feedbacks = await feedbackRepo.getFeedbackByUserId(userId);
     res.json({
       success: true,
-      feedback,
-      count: feedback.length,
+      feedbacks,
+      count: feedbacks.length,
     });
   } catch (error) {
     next(error);
@@ -99,7 +100,7 @@ router.get("/listener/:listenerId", async (req, res, next) => {
     );
     res.json({
       success: true,
-      feedback: listenerFeedback,
+      feedbacks: listenerFeedback,
       count: listenerFeedback.length,
     });
   } catch (error) {
@@ -180,11 +181,11 @@ router.get("/stats", async (req, res, next) => {
 // Get all feedback
 router.get("/", async (req, res, next) => {
   try {
-    const feedback = await feedbackRepo.getAllFeedback();
+    const feedbacks = await feedbackRepo.getAllFeedback();
     res.json({
       success: true,
-      feedback,
-      count: feedback.length,
+      feedbacks,
+      count: feedbacks.length,
     });
   } catch (error) {
     next(error);
