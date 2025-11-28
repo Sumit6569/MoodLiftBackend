@@ -4,7 +4,6 @@ const feedbackSchema = new mongoose.Schema(
   {
     feedbackId: { type: String, required: true, unique: true, index: true },
     userId: { type: String, required: true, index: true },
-    sessionId: { type: String, index: true }, // Made optional
     listenerId: { type: String, index: true }, // Optional - for listener feedback
     rating: { type: Number, required: true, min: 1, max: 5 },
     comment: { type: String },

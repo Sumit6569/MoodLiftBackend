@@ -38,7 +38,6 @@ router.post("/", async (req, res, next) => {
     const feedback = {
       feedbackId: uuidv4(),
       userId,
-      sessionId: sessionId || null,
       listenerId: listenerId || null,
       rating,
       comments: feedbackComment,
