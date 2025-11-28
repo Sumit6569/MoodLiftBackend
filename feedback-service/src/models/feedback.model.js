@@ -4,9 +4,16 @@ const feedbackSchema = new mongoose.Schema(
   {
     feedbackId: { type: String, required: true, unique: true, index: true },
     userId: { type: String, required: true, index: true },
-    sessionId: { type: String, required: true, index: true },
+    listenerId: { type: String, index: true }, // Optional - for listener feedback
     rating: { type: Number, required: true, min: 1, max: 5 },
     comment: { type: String },
+    comments: { type: String }, // Support both 'comment' and 'comments'
+    category: {
+      type: String,
+      enum: ["session", "platform", "listener", "feature", "bug", "other"],
+      default: "session",
+    },
+    improvements: [{ type: String }], // Array of improvement suggestions
     createdAt: { type: String, required: true },
   },
   {
@@ -56,5 +63,11 @@ export const feedbackRepo = {
   async getFeedbackByRating(rating) {
     return await FeedbackModel.find({ rating }).sort({ createdAt: -1 }).lean();
   },
-};
 
+  async getAverageRating() {
+    const result = await FeedbackModel.aggregate([
+      { $group: { _id: null, avgRating: { $avg: "$rating" } } },
+    ]);
+    return result.length > 0 ? result[0].avgRating : 0;
+  },
+};

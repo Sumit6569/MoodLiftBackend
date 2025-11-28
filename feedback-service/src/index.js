@@ -55,6 +55,7 @@ app.get("/health", (req, res) => {
     status: "OK",
     service: "feedback-service",
     timestamp: new Date().toISOString(),
+    version: "1.1.0", // Updated: sessionId now optional
   });
 });
 
