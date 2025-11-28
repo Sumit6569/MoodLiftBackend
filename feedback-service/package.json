@@ -1,8 +1,8 @@
 {
   "name": "feedback-service",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "",
+  "description": "Feedback service with optional sessionId",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --watch src/**/*.js --exec node src/index.js",
