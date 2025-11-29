@@ -1,10 +1,153 @@
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { aiInteractionRepo } from "../models/aiInteraction.model.js";
+import { geminiService } from "../services/gemini.service.js";
 
 const router = Router();
 
-// Create a new AI interaction
+// Chat with AI
+router.post("/chat", async (req, res, next) => {
+  try {
+    const { userId, message, conversationHistory } = req.body;
+
+    if (!userId || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: userId, message",
+      });
+    }
+
+    // Get AI response
+    const aiResponse = await geminiService.chat(
+      message,
+      conversationHistory || []
+    );
+
+    // Save interaction
+    const interaction = {
+      interactionId: uuidv4(),
+      userId,
+      query: message,
+      response: aiResponse.response,
+      timestamp: new Date().toISOString(),
+    };
+
+    await aiInteractionRepo.createInteraction(interaction);
+
+    res.json({
+      success: true,
+      response: aiResponse.response,
+      model: aiResponse.model,
+      interactionId: interaction.interactionId,
+    });
+  } catch (error) {
+    console.error("Chat error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to generate response",
+    });
+  }
+});
+
+// Analyze mood
+router.post("/analyze-mood", async (req, res, next) => {
+  try {
+    const { userId, text } = req.body;
+
+    if (!text) {
+      return res.status(400).json({
+        success: false,
+        message: "Text is required",
+      });
+    }
+
+    const analysis = await geminiService.analyzeMood(text);
+    res.json(analysis);
+  } catch (error) {
+    console.error("Mood analysis error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to analyze mood",
+    });
+  }
+});
+
+// Generate coping strategies
+router.post("/coping-strategies", async (req, res, next) => {
+  try {
+    const { mood, concerns } = req.body;
+
+    if (!mood) {
+      return res.status(400).json({
+        success: false,
+        message: "Mood is required",
+      });
+    }
+
+    const strategies = await geminiService.generateCopingStrategies(
+      mood,
+      concerns || []
+    );
+    res.json(strategies);
+  } catch (error) {
+    console.error("Strategy generation error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to generate strategies",
+    });
+  }
+});
+
+// Generate journal prompts
+router.post("/journal-prompts", async (req, res, next) => {
+  try {
+    const { mood, preferences } = req.body;
+
+    if (!mood) {
+      return res.status(400).json({
+        success: false,
+        message: "Mood is required",
+      });
+    }
+
+    const prompts = await geminiService.generateJournalPrompts(
+      mood,
+      preferences || []
+    );
+    res.json(prompts);
+  } catch (error) {
+    console.error("Prompt generation error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to generate prompts",
+    });
+  }
+});
+
+// Crisis detection
+router.post("/crisis-detection", async (req, res, next) => {
+  try {
+    const { text } = req.body;
+
+    if (!text) {
+      return res.status(400).json({
+        success: false,
+        message: "Text is required",
+      });
+    }
+
+    const crisis = await geminiService.detectCrisis(text);
+    res.json(crisis);
+  } catch (error) {
+    console.error("Crisis detection error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to detect crisis",
+    });
+  }
+});
+
+// Create a new AI interaction (legacy)
 router.post("/", async (req, res, next) => {
   try {
     const { userId, query, response } = req.body;
