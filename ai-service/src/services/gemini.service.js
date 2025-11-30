@@ -28,7 +28,7 @@ export const geminiService = {
   // Chat with Gemini AI
   async chat(userMessage, conversationHistory = []) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       // Build conversation context
       const context = conversationHistory
@@ -47,7 +47,7 @@ export const geminiService = {
       return {
         success: true,
         response: text,
-        model: "gemini-pro",
+        model: "gemini-2.5-flash",
       };
     } catch (error) {
       console.error("Gemini API error:", error);
@@ -58,7 +58,7 @@ export const geminiService = {
   // Analyze mood from text
   async analyzeMood(text) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const prompt = `Analyze the emotional tone and mood of the following text. Provide:
 1. Primary emotion (happy, sad, anxious, angry, neutral, etc.)
@@ -103,7 +103,7 @@ Respond in JSON format:
   // Generate personalized coping strategies
   async generateCopingStrategies(mood, concerns) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const prompt = `Based on the user's current mood (${mood}) and concerns (${concerns.join(
         ", "
@@ -154,7 +154,7 @@ Respond in JSON format:
   // Generate journal prompts
   async generateJournalPrompts(mood, preferences = []) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const prompt = `Generate 5 thoughtful journaling prompts for someone feeling ${mood}. 
 Preferences: ${preferences.join(", ") || "general well-being"}
@@ -201,7 +201,7 @@ Respond in JSON format:
   // Crisis detection
   async detectCrisis(text) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const prompt = `Analyze if the following text contains signs of a mental health crisis (suicide ideation, self-harm, immediate danger, severe distress).
 
