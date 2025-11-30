@@ -8,7 +8,7 @@ const router = Router();
 // Chat with AI
 router.post("/chat", async (req, res, next) => {
   try {
-    const { userId, message, conversationHistory } = req.body;
+    const { userId, message, conversationHistory, useMemory } = req.body;
 
     if (!userId || !message) {
       return res.status(400).json({
@@ -17,10 +17,11 @@ router.post("/chat", async (req, res, next) => {
       });
     }
 
-    // Get AI response
+    // Get AI response with optional memory
     const aiResponse = await geminiService.chat(
       message,
-      conversationHistory || []
+      conversationHistory || [],
+      useMemory !== false ? userId : null // Use memory by default
     );
 
     // Save interaction
@@ -39,6 +40,7 @@ router.post("/chat", async (req, res, next) => {
       response: aiResponse.response,
       model: aiResponse.model,
       interactionId: interaction.interactionId,
+      conversationId: aiResponse.conversationId,
     });
   } catch (error) {
     console.error("Chat error:", error);
@@ -46,6 +48,77 @@ router.post("/chat", async (req, res, next) => {
       success: false,
       message: error.message || "Failed to generate response",
     });
+  }
+});
+
+// Stream chat response (Server-Sent Events)
+router.post("/chat/stream", async (req, res, next) => {
+  try {
+    const { userId, message, conversationHistory, useMemory } = req.body;
+
+    if (!userId || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: userId, message",
+      });
+    }
+
+    // Set SSE headers
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const stream = await geminiService.chatStream(
+      message,
+      conversationHistory || [],
+      useMemory !== false ? userId : null
+    );
+
+    let fullResponse = "";
+    for await (const chunk of stream) {
+      const chunkText = chunk.text();
+      fullResponse += chunkText;
+      res.write(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
+    }
+
+    // Save interaction after streaming
+    const interaction = {
+      interactionId: uuidv4(),
+      userId,
+      query: message,
+      response: fullResponse,
+      timestamp: new Date().toISOString(),
+    };
+    await aiInteractionRepo.createInteraction(interaction);
+
+    res.write(`data: ${JSON.stringify({ done: true, interactionId: interaction.interactionId })}\n\n`);
+    res.end();
+  } catch (error) {
+    console.error("Stream error:", error);
+    res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+    res.end();
+  }
+});
+
+// Get conversation memory
+router.get("/memory/:userId", async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const memory = geminiService.getMemory(userId);
+    res.json(memory);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Clear conversation memory
+router.delete("/memory/:userId", async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const result = geminiService.clearMemory(userId);
+    res.json(result);
+  } catch (error) {
+    next(error);
   }
 });
 

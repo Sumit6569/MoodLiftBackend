@@ -33,29 +33,74 @@ const corsOptions = {
 };
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(compression());
 app.use(cors(corsOptions));
-app.use(morgan("combined"));
+
+// Request logging
+if (process.env.NODE_ENV === "production") {
+  app.use(morgan("combined"));
+} else {
+  app.use(morgan("dev"));
+}
+
+// Request ID middleware
+app.use((req, res, next) => {
+  req.id = Math.random().toString(36).substring(7);
+  res.setHeader("X-Request-ID", req.id);
+  next();
+});
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === "production" ? 100 : 1000,
   message: "Too many requests from this IP, please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
 });
-app.use(limiter);
+app.use("/api/", limiter);
+
+// Stricter rate limit for AI endpoints
+const aiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: process.env.NODE_ENV === "production" ? 20 : 100,
+  message: "Too many AI requests, please slow down.",
+});
+app.use("/api/v1/ai/chat", aiLimiter);
+app.use("/api/v1/ai/chat/stream", aiLimiter);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Health check
+// Health check with detailed status
 app.get("/health", (req, res) => {
   res.json({
     status: "OK",
     service: "ai-service",
+    version: "2.0.0",
     timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+    },
+    environment: process.env.NODE_ENV || "development",
   });
+});
+
+// Readiness check
+app.get("/ready", (req, res) => {
+  // Check if MongoDB is connected
+  const mongoose = require("mongoose");
+  if (mongoose.connection.readyState === 1) {
+    res.json({ status: "ready" });
+  } else {
+    res.status(503).json({ status: "not ready", reason: "database not connected" });
+  }
 });
 
 // Routes
@@ -64,10 +109,27 @@ app.use("/api/v1/ai", aiRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error(`[${req.id}] Error:`, err.stack);
+  
+  // Don't leak error details in production
+  const message = process.env.NODE_ENV === "production" 
+    ? "Internal server error" 
+    : err.message;
+  
   res.status(err.status || 500).json({
     success: false,
-    message: err.message || "Internal server error",
+    message,
+    requestId: req.id,
+    ...(process.env.NODE_ENV !== "production" && { stack: err.stack }),
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    path: req.path,
   });
 });
 
