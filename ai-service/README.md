@@ -5,6 +5,7 @@ Production-ready AI microservice for mental health support powered by Google Gem
 ## 🚀 Features
 
 ### Core AI Capabilities
+
 - **Intelligent Chat**: Context-aware conversations with mental health focus
 - **Mood Analysis**: Emotion detection and sentiment analysis
 - **Coping Strategies**: Personalized recommendations based on mood
@@ -12,6 +13,7 @@ Production-ready AI microservice for mental health support powered by Google Gem
 - **Crisis Detection**: Identifies urgent mental health situations
 
 ### Production Features
+
 - ✅ **Conversation Memory**: Automatic context retention per user
 - ✅ **Streaming Responses**: Real-time SSE for chat (better UX)
 - ✅ **Retry Logic**: Automatic retry with exponential backoff
@@ -28,6 +30,7 @@ Production-ready AI microservice for mental health support powered by Google Gem
 ### Chat Endpoints
 
 #### POST `/api/v1/ai/chat`
+
 Standard chat with conversation memory.
 
 ```json
@@ -40,6 +43,7 @@ Standard chat with conversation memory.
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -51,20 +55,21 @@ Response:
 ```
 
 #### POST `/api/v1/ai/chat/stream`
+
 Streaming chat for real-time responses (Server-Sent Events).
 
 ```javascript
-const eventSource = new EventSource('/api/v1/ai/chat/stream', {
-  method: 'POST',
-  body: JSON.stringify({ userId, message })
+const eventSource = new EventSource("/api/v1/ai/chat/stream", {
+  method: "POST",
+  body: JSON.stringify({ userId, message }),
 });
 
 eventSource.onmessage = (event) => {
   const data = JSON.parse(event.data);
   if (data.done) {
-    console.log('Complete!', data.interactionId);
+    console.log("Complete!", data.interactionId);
   } else {
-    console.log('Chunk:', data.text);
+    console.log("Chunk:", data.text);
   }
 };
 ```
@@ -72,6 +77,7 @@ eventSource.onmessage = (event) => {
 ### Memory Management
 
 #### GET `/api/v1/ai/memory/:userId`
+
 Get conversation history for a user.
 
 ```json
@@ -86,6 +92,7 @@ Get conversation history for a user.
 ```
 
 #### DELETE `/api/v1/ai/memory/:userId`
+
 Clear conversation memory for a user.
 
 ```json
@@ -98,6 +105,7 @@ Clear conversation memory for a user.
 ### Analysis Endpoints
 
 #### POST `/api/v1/ai/analyze-mood`
+
 ```json
 {
   "text": "I feel overwhelmed and stressed"
@@ -105,6 +113,7 @@ Clear conversation memory for a user.
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -118,6 +127,7 @@ Response:
 ```
 
 #### POST `/api/v1/ai/coping-strategies`
+
 ```json
 {
   "mood": "anxious",
@@ -126,6 +136,7 @@ Response:
 ```
 
 #### POST `/api/v1/ai/journal-prompts`
+
 ```json
 {
   "mood": "reflective",
@@ -134,6 +145,7 @@ Response:
 ```
 
 #### POST `/api/v1/ai/crisis-detection`
+
 ```json
 {
   "text": "User message to analyze"
@@ -141,6 +153,7 @@ Response:
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -155,9 +168,11 @@ Response:
 ### Legacy Endpoints
 
 #### GET `/api/interactions/user/:userId`
+
 Get all AI interactions for a user.
 
 #### GET `/api/interactions/:interactionId`
+
 Get specific interaction by ID.
 
 ## 🔧 Configuration
@@ -176,10 +191,12 @@ FRONTEND_URL=https://your-frontend.com
 ### Rate Limits
 
 **Development:**
+
 - General: 1000 req/15min
 - AI Chat: 100 req/min
 
 **Production:**
+
 - General: 100 req/15min
 - AI Chat: 20 req/min
 
@@ -195,21 +212,25 @@ maxOutputTokens: 1024
 ## 🛠️ Development
 
 ### Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### Run Development Server
+
 ```bash
 npm run dev
 ```
 
 ### Build for Production
+
 ```bash
 npm run build
 ```
 
 ### Start Production Server
+
 ```bash
 npm start
 ```
@@ -226,11 +247,13 @@ npm start
 ## 📊 Monitoring
 
 ### Health Check
+
 ```bash
 GET /health
 ```
 
 Response includes:
+
 - Service status
 - Version
 - Uptime
@@ -238,6 +261,7 @@ Response includes:
 - Environment
 
 ### Readiness Check
+
 ```bash
 GET /ready
 ```
@@ -247,6 +271,7 @@ Checks database connectivity.
 ## 🚀 Deployment
 
 ### Docker
+
 ```dockerfile
 FROM node:18-alpine
 WORKDIR /app
@@ -258,6 +283,7 @@ CMD ["npm", "start"]
 ```
 
 ### Render.com
+
 1. Connect GitHub repository
 2. Set root directory: `ai-service`
 3. Build command: `npm install`
@@ -267,11 +293,13 @@ CMD ["npm", "start"]
 ## 🧪 Testing
 
 ### Test Health Endpoint
+
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:3005/health"
 ```
 
 ### Test Chat
+
 ```powershell
 $body = @{
   userId = "test123"
@@ -283,6 +311,7 @@ Invoke-RestMethod -Uri "http://localhost:3005/api/v1/ai/chat" `
 ```
 
 ### Test Mood Analysis
+
 ```powershell
 $body = @{
   text = "I feel great today!"
@@ -310,6 +339,7 @@ POST /api/v1/ai/chat
 ```
 
 ### Disable Memory for Single Request
+
 ```json
 {
   "userId": "user123",
@@ -319,6 +349,7 @@ POST /api/v1/ai/chat
 ```
 
 ### Manual History Management
+
 ```json
 {
   "userId": "user123",
@@ -350,15 +381,19 @@ POST /api/v1/ai/chat
 ## 🐛 Troubleshooting
 
 ### "API quota exceeded"
+
 Wait 60 seconds or upgrade Gemini API plan.
 
 ### "Database not connected"
+
 Check MongoDB URI and network connectivity.
 
 ### "Too many requests"
+
 Rate limit hit - wait or adjust limits in config.
 
 ### "Memory not working"
+
 Ensure `userId` is provided and consistent.
 
 ## 📚 Tech Stack
@@ -374,26 +409,27 @@ Ensure `userId` is provided and consistent.
 ## 🤝 Integration
 
 ### Frontend Example
+
 ```typescript
-import { aiAPI } from './api-client';
+import { aiAPI } from "./api-client";
 
 // Chat
-const response = await aiAPI.chat('user123', 'Hello');
+const response = await aiAPI.chat("user123", "Hello");
 
 // Analyze mood
-const mood = await aiAPI.analyzeMood('I feel great!');
+const mood = await aiAPI.analyzeMood("I feel great!");
 
 // Get strategies
-const strategies = await aiAPI.generateCopingStrategies('anxious', ['work']);
+const strategies = await aiAPI.generateCopingStrategies("anxious", ["work"]);
 
 // Get prompts
-const prompts = await aiAPI.generateJournalPrompts('reflective', ['gratitude']);
+const prompts = await aiAPI.generateJournalPrompts("reflective", ["gratitude"]);
 
 // Check crisis
 const crisis = await aiAPI.detectCrisis(userMessage);
 
 // Get history
-const history = await aiAPI.getUserInteractions('user123');
+const history = await aiAPI.getUserInteractions("user123");
 ```
 
 ## 📄 License
