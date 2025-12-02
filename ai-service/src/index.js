@@ -24,6 +24,7 @@ const corsOptions = {
     "http://localhost:3000",
     "https://moodlift.vercel.app",
     "https://moodlift.netlify.app",
+    "https://mood-lift-support.vercel.app",
     process.env.FRONTEND_URL,
   ].filter(Boolean),
   credentials: true,
@@ -33,10 +34,12 @@ const corsOptions = {
 };
 
 // Middleware
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 app.use(compression());
 app.use(cors(corsOptions));
 
@@ -99,7 +102,9 @@ app.get("/ready", (req, res) => {
   if (mongoose.connection.readyState === 1) {
     res.json({ status: "ready" });
   } else {
-    res.status(503).json({ status: "not ready", reason: "database not connected" });
+    res
+      .status(503)
+      .json({ status: "not ready", reason: "database not connected" });
   }
 });
 
@@ -110,12 +115,13 @@ app.use("/api/v1/ai", aiRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(`[${req.id}] Error:`, err.stack);
-  
+
   // Don't leak error details in production
-  const message = process.env.NODE_ENV === "production" 
-    ? "Internal server error" 
-    : err.message;
-  
+  const message =
+    process.env.NODE_ENV === "production"
+      ? "Internal server error"
+      : err.message;
+
   res.status(err.status || 500).json({
     success: false,
     message,
