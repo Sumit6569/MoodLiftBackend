@@ -3,18 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
-  "type": "module",
   "scripts": {
-    "dev": "nodemon --watch src/**/*.js --exec node src/index.js",
-    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify --external:express --external:cors --external:helmet --external:morgan --external:compression --external:express-rate-limit --external:dotenv --external:mongoose --external:uuid --external:mongodb --external:@google/generative-ai",
+    "dev": "nodemon --watch 'src/**/*.js' --exec 'node' src/index.js",
+    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify --external:express --external:cors --external:helmet --external:morgan --external:compression --external:express-rate-limit --external:dotenv --external:mongoose --external:uuid --external:mongodb",
     "clean": "node -e \"const fs = require('fs'); if (fs.existsSync('dist')) fs.rmSync('dist', { recursive: true, force: true });\"",
-    "start": "node src/index.js",
-    "start:prod": "NODE_ENV=production node src/index.js",
+    "start": "node dist/index.cjs",
     "start:dev": "node src/index.js",
     "deploy": "npm run clean && npm run build && npm run start",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint src --ext .js",
-    "format": "prettier --write \"src/**/*.js\""
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -24,7 +20,6 @@
     "nodemon": "^3.0.2"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -34,7 +29,6 @@
     "mongo": "^0.1.0",
     "mongodb": "^6.19.0",
     "mongoose": "^8.6.1",
-    "morgan": "^1.10.1",
     "uuid": "^11.1.0"
   }
 }

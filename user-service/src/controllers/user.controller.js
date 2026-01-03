@@ -130,29 +130,14 @@ export const uploadProfilePicture = async (req, res, next) => {
     }
 
     // Upload new image to Cloudinary
-    let imageUrl;
-    try {
-      const result = await uploadToCloudinary(
-        req.file.buffer,
-        "moodlift/profiles"
-      );
-      imageUrl = result.secure_url;
-    } catch (cloudinaryError) {
-      console.error("Cloudinary upload error:", cloudinaryError);
-
-      // Fallback: use a data URL or placeholder
-      // For now, use a default avatar based on user's initials
-      const initials = user.name ? user.name.charAt(0).toUpperCase() : "U";
-      imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        user.name || "User"
-      )}&size=500&background=4fd1c5&color=fff&bold=true`;
-
-      console.log("Using fallback avatar service:", imageUrl);
-    }
+    const result = await uploadToCloudinary(
+      req.file.buffer,
+      "moodlift/profiles"
+    );
 
     // Update user with new profile picture URL
     const updatedUser = await userRepo.updateUser(userId, {
-      profilePicture: imageUrl,
+      profilePicture: result.secure_url,
       updatedAt: new Date(),
     });
 
@@ -162,14 +147,10 @@ export const uploadProfilePicture = async (req, res, next) => {
       success: true,
       message: "Profile picture uploaded successfully",
       user: safeUser,
-      imageUrl: imageUrl,
+      imageUrl: result.secure_url,
     });
   } catch (error) {
     console.error("Upload profile picture error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to upload profile picture",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    next(error);
   }
 };

@@ -8,7 +8,7 @@ const router = Router();
 // Chat with AI
 router.post("/chat", async (req, res, next) => {
   try {
-    const { userId, message, conversationHistory, useMemory } = req.body;
+    const { userId, message, conversationHistory } = req.body;
 
     if (!userId || !message) {
       return res.status(400).json({
@@ -17,11 +17,10 @@ router.post("/chat", async (req, res, next) => {
       });
     }
 
-    // Get AI response with optional memory
+    // Get AI response
     const aiResponse = await geminiService.chat(
       message,
-      conversationHistory || [],
-      useMemory !== false ? userId : null // Use memory by default
+      conversationHistory || []
     );
 
     // Save interaction
@@ -40,7 +39,6 @@ router.post("/chat", async (req, res, next) => {
       response: aiResponse.response,
       model: aiResponse.model,
       interactionId: interaction.interactionId,
-      conversationId: aiResponse.conversationId,
     });
   } catch (error) {
     console.error("Chat error:", error);
@@ -48,82 +46,6 @@ router.post("/chat", async (req, res, next) => {
       success: false,
       message: error.message || "Failed to generate response",
     });
-  }
-});
-
-// Stream chat response (Server-Sent Events)
-router.post("/chat/stream", async (req, res, next) => {
-  try {
-    const { userId, message, conversationHistory, useMemory } = req.body;
-
-    if (!userId || !message) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields: userId, message",
-      });
-    }
-
-    // Set SSE headers
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
-
-    const stream = await geminiService.chatStream(
-      message,
-      conversationHistory || [],
-      useMemory !== false ? userId : null
-    );
-
-    let fullResponse = "";
-    for await (const chunk of stream) {
-      const chunkText = chunk.text();
-      fullResponse += chunkText;
-      res.write(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
-    }
-
-    // Save interaction after streaming
-    const interaction = {
-      interactionId: uuidv4(),
-      userId,
-      query: message,
-      response: fullResponse,
-      timestamp: new Date().toISOString(),
-    };
-    await aiInteractionRepo.createInteraction(interaction);
-
-    res.write(
-      `data: ${JSON.stringify({
-        done: true,
-        interactionId: interaction.interactionId,
-      })}\n\n`
-    );
-    res.end();
-  } catch (error) {
-    console.error("Stream error:", error);
-    res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
-    res.end();
-  }
-});
-
-// Get conversation memory
-router.get("/memory/:userId", async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const memory = geminiService.getMemory(userId);
-    res.json(memory);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Clear conversation memory
-router.delete("/memory/:userId", async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const result = geminiService.clearMemory(userId);
-    res.json(result);
-  } catch (error) {
-    next(error);
   }
 });
 
@@ -341,235 +263,6 @@ router.delete("/:interactionId", async (req, res, next) => {
     res.status(204).send();
   } catch (error) {
     next(error);
-  }
-});
-
-// Enhanced AI Features
-
-// AI Journal Analyzer
-router.post("/analyze-journal", async (req, res, next) => {
-  try {
-    const { journalEntry } = req.body;
-    const userId = req.user?.userId;
-
-    if (!journalEntry || journalEntry.trim().length < 10) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Journal entry too short" });
-    }
-
-    const prompt = `Analyze this journal entry with deep emotional intelligence:
-
-"${journalEntry}"
-
-Provide a comprehensive analysis in JSON format with:
-1. sentiment: "positive" | "negative" | "neutral" | "mixed"
-2. sentimentScore: 0-100 (higher = more positive)
-3. emotions: Array of { emotion: string, intensity: 0-100 }
-4. themes: Array of key themes (max 5)
-5. insights: Array of psychological insights (3-5 sentences each)
-6. recommendations: Array of actionable recommendations
-7. patterns: Array of behavioral patterns detected
-8. growthAreas: Areas for personal development
-9. strengths: Positive qualities and coping mechanisms identified
-
-Be specific, compassionate, and actionable.`;
-
-    const aiResponse = await geminiService.chat(prompt, [], null);
-    let analysisText = aiResponse.response;
-
-    // Extract JSON from markdown code blocks if present
-    analysisText = analysisText
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
-      .trim();
-
-    const analysis = JSON.parse(analysisText);
-
-    res.json({ success: true, analysis });
-  } catch (error) {
-    console.error("Journal analysis error:", error);
-    res
-      .status(500)
-      .json({ success: false, error: "Failed to analyze journal" });
-  }
-});
-
-// AI Voice Analyzer
-router.post("/analyze-voice", async (req, res, next) => {
-  try {
-    const audioFile = req.files?.audio;
-    const userId = req.user?.userId;
-
-    if (!audioFile) {
-      return res
-        .status(400)
-        .json({ success: false, error: "No audio file provided" });
-    }
-
-    // Mock transcript for now - in production, integrate speech-to-text
-    const transcript =
-      "I've been feeling really stressed lately with work and personal life. It's hard to balance everything.";
-
-    const prompt = `Analyze this voice transcript for emotional state:
-
-"${transcript}"
-
-Provide comprehensive voice analysis in JSON format with:
-1. transcript: The full text
-2. emotionalTone: { tone: string, confidence: 0-100, indicators: string[] }
-3. stressLevel: 0-100
-4. sentimentScore: 0-100
-5. energyLevel: 0-100
-6. keyPhrases: Array of emotionally significant phrases
-7. concerns: Array of areas of concern
-8. suggestions: Array of personalized suggestions
-
-Be empathetic and specific.`;
-
-    const aiResponse = await geminiService.chat(prompt, [], null);
-    let analysisText = aiResponse.response;
-    analysisText = analysisText
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
-      .trim();
-
-    const analysis = JSON.parse(analysisText);
-    analysis.transcript = transcript;
-
-    res.json({ success: true, analysis });
-  } catch (error) {
-    console.error("Voice analysis error:", error);
-    res.status(500).json({ success: false, error: "Failed to analyze voice" });
-  }
-});
-
-// AI Predictive Insights
-router.get("/predictive-insights", async (req, res, next) => {
-  try {
-    const { timeRange = "month" } = req.query;
-    const userId = req.user?.userId;
-
-    // Mock mood history for demonstration
-    const mockMoodHistory = [
-      {
-        mood: "good",
-        emotions: ["happy", "calm"],
-        activities: ["exercise", "meditation"],
-        date: "2024-12-01",
-      },
-      {
-        mood: "neutral",
-        emotions: ["tired", "stressed"],
-        activities: ["work"],
-        date: "2024-12-02",
-      },
-      {
-        mood: "good",
-        emotions: ["excited", "hopeful"],
-        activities: ["socializing"],
-        date: "2024-12-03",
-      },
-      {
-        mood: "bad",
-        emotions: ["anxious", "overwhelmed"],
-        activities: ["work"],
-        date: "2024-12-04",
-      },
-      {
-        mood: "good",
-        emotions: ["calm", "grateful"],
-        activities: ["family_time"],
-        date: "2024-12-05",
-      },
-    ];
-
-    const prompt = `Analyze this mood history data and provide predictive insights:
-
-Mood History: ${JSON.stringify(mockMoodHistory)}
-Time Range: ${timeRange}
-
-Provide comprehensive predictive analysis in JSON format with:
-1. overallWellness: 0-100 wellness score
-2. patterns: Array of { pattern: string, frequency: number, correlation: string, insight: string }
-3. predictions: { predictedMood: string, confidence: 0-100, factors: string[], recommendations: string[] }
-4. trends: Array of { metric: string, trend: "up"|"down"|"stable", change: number, description: string }
-5. triggers: Array of { trigger: string, impact: string, frequency: 0-100 }
-6. achievements: Array of positive accomplishments
-7. warnings: Array of concerning patterns
-8. personalized_tips: Array of actionable tips
-
-Be data-driven, specific, and encouraging.`;
-
-    const aiResponse = await geminiService.chat(prompt, [], null);
-    let insightsText = aiResponse.response;
-    insightsText = insightsText
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
-      .trim();
-
-    const insights = JSON.parse(insightsText);
-
-    res.json({ success: true, insights });
-  } catch (error) {
-    console.error("Predictive insights error:", error);
-    res
-      .status(500)
-      .json({ success: false, error: "Failed to generate insights" });
-  }
-});
-
-// AI Goal Planner
-router.post("/generate-goal-plan", async (req, res, next) => {
-  try {
-    const { userInput, timeframe, focusArea } = req.body;
-    const userId = req.user?.userId;
-
-    if (!userInput || userInput.trim().length < 10) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          error: "Please provide more details about your goals",
-        });
-    }
-
-    const prompt = `Create a personalized wellness goal plan based on:
-
-User's Goal: "${userInput}"
-Timeframe: ${timeframe}
-Focus Area: ${focusArea || "General wellness"}
-
-Provide a comprehensive goal plan in JSON format with:
-1. goals: Array of 3-5 SMART goals with:
-   - title: Clear goal title
-   - description: Detailed description
-   - category: mental_health|relationships|self_care|stress_management|personal_growth|work_life_balance
-   - reasoning: Why this goal matters
-   - milestones: Array of 4-6 specific milestones
-   - timeframe: Realistic timeframe
-   - successMetrics: How to measure success
-2. strategies: Array of proven strategies to achieve goals
-3. potentialChallenges: Array of { challenge: string, solution: string }
-4. motivationalInsights: Array of encouraging insights
-
-Be specific, realistic, and action-oriented.`;
-
-    const aiResponse = await geminiService.chat(prompt, [], null);
-    let planText = aiResponse.response;
-    planText = planText
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
-      .trim();
-
-    const plan = JSON.parse(planText);
-
-    res.json({ success: true, plan });
-  } catch (error) {
-    console.error("Goal planning error:", error);
-    res
-      .status(500)
-      .json({ success: false, error: "Failed to generate goal plan" });
   }
 });
 
