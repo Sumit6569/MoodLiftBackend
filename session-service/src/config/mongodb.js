@@ -3,13 +3,13 @@ import mongoose from "mongoose";
 export const connectDB = async () => {
   try {
     const mongoUri =
-      process.env.MONGODB_URI || "mongodb://localhost:27017/moodlift";
+      process.env.MONGODB_URI || "mongodb://mongo:27017/moodlift";
     await mongoose.connect(mongoUri, {
       dbName: process.env.MONGODB_DB || "moodlift",
       retryWrites: true,
       w: "majority"
     });
-    console.log("✅ Connected to MongoDB Atlas");
+    console.log("✅ Connected to MongoDB");
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
     process.exit(1);

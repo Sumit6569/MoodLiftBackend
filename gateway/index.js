@@ -1,8 +1,31 @@
 import express from "express";
 import proxy from "express-http-proxy";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
+const serviceHosts = {
+  user: process.env.USER_SERVICE_URL || "http://user-service:3001",
+  session: process.env.SESSION_SERVICE_URL || "http://session-service:3002",
+  chat: process.env.CHAT_SERVICE_URL || "http://chat-service:3003",
+  payment: process.env.PAYMENT_SERVICE_URL || "http://payment-service:3004",
+  ai: process.env.AI_SERVICE_URL || "http://ai-service:3005",
+  feedback: process.env.FEEDBACK_SERVICE_URL || "http://feedback-service:3006",
+};
+
+const allowedOrigins = [
+  "http://localhost:8080",
+  "http://localhost:3000",
+  "https://mood-lift-support.vercel.app",
+  process.env.FRONTEND_URL,
+  ...(process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
+    : []),
+].filter(Boolean);
 
 // Request logging middleware (first)
 app.use((req, res, next) => {
@@ -15,12 +38,6 @@ app.use(express.json());
 
 // CORS middleware
 app.use((req, res, next) => {
-  const allowedOrigins = [
-    "http://localhost:8080",
-    "http://localhost:3000",
-    "https://mood-lift-support.vercel.app",
-  ];
-
   const origin = req.headers.origin;
 
   if (allowedOrigins.includes(origin)) {
@@ -37,7 +54,6 @@ app.use((req, res, next) => {
   );
   res.header("Access-Control-Allow-Credentials", "true");
 
-  // Handle preflight requests
   if (req.method === "OPTIONS") {
     console.log(`✅ CORS preflight for ${req.url}`);
     return res.sendStatus(200);
@@ -48,25 +64,19 @@ app.use((req, res, next) => {
 
 // Middleware: Skip JWT verification for public routes
 app.use((req, res, next) => {
-  // Public routes that don't need authentication
   const publicRoutes = ["/auth/", "/health", "/listeners/approved"];
 
   console.log(`🔍 Checking auth for: ${req.method} ${req.path}`);
-  console.log(`🔓 Public routes:`, publicRoutes);
 
-  // Check if the request is for a public route
   const isPublicRoute = publicRoutes.some((route) =>
     req.path.startsWith(route)
   );
-
-  console.log(`✨ Is public route: ${isPublicRoute}`);
 
   if (isPublicRoute) {
     console.log(`👌 Public route - skipping auth`);
     return next();
   }
 
-  // For protected routes, verify JWT token
   const token = req.headers["authorization"];
   if (!token) {
     console.log(`❌ No token provided for protected route`);
@@ -101,45 +111,36 @@ app.get("/test", (req, res) => {
   });
 });
 
-// User service routes (auth, users, listeners) - use localhost for local development
+// User service routes
 app.use(
   "/auth",
-  proxy("http://localhost:3001", {
-    proxyReqPathResolver: (req) => {
-      console.log(
-        `🔗 Proxying auth request: ${req.url} -> /api/v1/auth${req.url}`
-      );
-      return `/api/v1/auth${req.url}`;
-    },
+  proxy(serviceHosts.user, {
+    proxyReqPathResolver: (req) => `/api/v1/auth${req.url}`,
   })
 );
 app.use(
   "/users",
-  proxy("http://localhost:3001", {
+  proxy(serviceHosts.user, {
     proxyReqPathResolver: (req) => `/api/v1/users${req.url}`,
   })
 );
 app.use(
   "/listeners",
-  proxy("http://localhost:3001", {
+  proxy(serviceHosts.user, {
     proxyReqPathResolver: (req) => `/api/v1/listeners${req.url}`,
   })
 );
 
-// Other service routes - use localhost for local development
+// Other service routes
 app.use(
   "/sessions",
-  proxy("http://localhost:3002", {
-    proxyReqPathResolver: (req) => {
-      console.log(
-        `🔗 Proxying session request: ${req.url} -> /api/sessions${req.url}`
-      );
-      return `/api/sessions${req.url}`;
-    },
+  proxy(serviceHosts.session, {
+    proxyReqPathResolver: (req) => `/api/sessions${req.url}`,
   })
 );
-app.use("/chat", proxy("http://localhost:3003"));
-app.use("/payment", proxy("http://localhost:3004"));
-app.use("/ai", proxy("http://localhost:3005"));
-app.use("/feedback", proxy("http://localhost:3006"));
-app.listen(3000, () => console.log("🚀 API Gateway running on 3000"));
+app.use("/chat", proxy(serviceHosts.chat));
+app.use("/payment", proxy(serviceHosts.payment));
+app.use("/ai", proxy(serviceHosts.ai));
+app.use("/feedback", proxy(serviceHosts.feedback));
+
+app.listen(PORT, () => console.log(`🚀 API Gateway running on ${PORT}`));

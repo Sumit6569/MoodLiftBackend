@@ -10,7 +10,7 @@ import sessionRoutes from "./routes/session.route.js";
 import mongoose from "mongoose";
 dotenv.config();
 const MONGODB_URI =
-  process.env["MONGODB_URI"] || "mongodb://localhost:27017/moodlift";
+  process.env["MONGODB_URI"] || "mongodb://mongo:27017/moodlift";
 const app = express();
 const PORT = process.env.PORT || 3002;
 
@@ -91,13 +91,13 @@ mongoose
     w: "majority",
   })
   .then(() => {
-    console.log("✅ Connected to MongoDB Atlas");
+    console.log("✅ Connected to MongoDB");
     app.listen(PORT, () => {
       console.log(`🚀 Session Service running on port ${PORT}`);
       console.log(
         `📊 Environment: ${process.env["NODE_ENV"] || "development"}`
       );
-      console.log(`🔗 API URL: http://localhost:${PORT}/api`);
+      console.log("🔗 API base path: /api");
     });
   })
   .catch((err) => {
