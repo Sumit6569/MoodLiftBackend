@@ -17,18 +17,9 @@ const PORT = process.env.PORT || 3002;
 // Connect to MongoDB
 connectDB();
 
-// CORS Configuration
+// CORS Configuration - Temporary: Allow all origins for debugging
 const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:8080",
-    "http://localhost:8081",
-    "https://mood-lift-support.vercel.app",
-    "https://moodlift.vercel.app",
-    "https://moodlift.netlify.app",
-    process.env.FRONTEND_URL,
-  ].filter(Boolean),
-  credentials: true,
+  origin: "*",
   optionsSuccessStatus: 200,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -50,6 +41,9 @@ app.use(limiter);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Handle preflight requests
+app.options("*", cors(corsOptions));
 
 // Health check
 app.get("/health", (req, res) => {
