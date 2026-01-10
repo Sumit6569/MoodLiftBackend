@@ -41,9 +41,6 @@ app.use(limiter);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Handle preflight requests
-app.options("*", cors(corsOptions));
-
 // Health check
 app.get("/health", (req, res) => {
   res.json({
