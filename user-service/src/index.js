@@ -58,6 +58,10 @@ app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/listeners", listenerRoute);
 app.use("/api/v1/mood", moodRoute);
 
+// Admin routes (alias to existing routes for backward compatibility)
+app.use("/api/v1/admin/users", userRoute);
+app.use("/api/v1/admin/listeners", listenerRoute);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Error:", err);
