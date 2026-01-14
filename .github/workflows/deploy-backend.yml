@@ -10,33 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Get your repository code
+      # 1️⃣ Checkout code
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup SSH so GitHub can talk to your EC2
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
-      # 3️⃣ Deploy on EC2
+      # 2️⃣ Deploy via SSH (SAFE WAY)
       - name: Deploy on EC2
-        run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
             set -e
-
             cd ~/moodlift/MoodLiftBackend
-
-            echo "Pulling latest code..."
             git pull origin main
-
-            echo "Rebuilding containers..."
             docker compose down
             docker compose build
             docker compose up -d
-
-            echo "Deployment complete."
-          EOF
