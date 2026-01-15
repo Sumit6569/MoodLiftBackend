@@ -1,4 +1,4 @@
-name: Deploy MoodLift Backend
+name: Deploy Backend to EC2
 
 on:
   push:
@@ -10,28 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Deploy to EC2
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          timeout: 60s
-          command_timeout: 15m
           script: |
             set -e
             cd ~/moodlift/MoodLiftBackend
+
+            echo "🔄 Pulling latest code..."
             git pull origin main
 
-            echo "Stopping old containers..."
-            docker ps -q | xargs -r docker stop
-            docker ps -aq | xargs -r docker rm
-
-            echo "Rebuilding services..."
+            echo "🐳 Rebuilding services..."
             ./deploy.sh
 
-            echo "Deployment complete."
+            echo "✅ Backend deployment completed"
