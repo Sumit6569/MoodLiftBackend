@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./user-service/.env
+    restart: unless-stopped
+
+  session-service:
+    build:
+      context: ./session-service
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./session-service/.env
+    restart: unless-stopped
+
+  chat-service:
+    build:
+      context: ./chat-service
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
+    env_file:
+      - ./chat-service/.env
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    ports:
+      - "3004:3004"
+    env_file:
+      - ./payment-service/.env
+    restart: unless-stopped
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+    env_file:
+      - ./ai-service/.env
+    restart: unless-stopped
+
+  feedback-service:
+    build:
+      context: ./feedback-service
+      dockerfile: Dockerfile
+    ports:
+      - "3006:3006"
+    env_file:
+      - ./feedback-service/.env
+    restart: unless-stopped
