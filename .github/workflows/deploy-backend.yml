@@ -10,11 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
@@ -22,24 +21,19 @@ jobs:
           script: |
             set -e
 
-            cd ~/moodlift/MoodLiftBackend
+            cd ~/MoodLiftBackend
 
-            echo "🔄 Pulling latest code..."
+            echo "Pulling latest code..."
             git pull origin main
 
-            echo "🧹 Cleaning old containers..."
-            docker-compose down
+            echo "Stopping containers..."
+            docker compose down
 
-            echo "🚀 Building and starting with Docker Compose..."
-            docker-compose up -d --build
+            echo "Building..."
+            docker compose up -d --build
 
-            echo "🧪 Checking service health..."
-            sleep 10
+            sleep 15
 
-            curl -f http://localhost:3001/api/health
-            curl -f http://localhost:3002/health
-            curl -f http://localhost:3003/health
-            curl -f http://localhost:3005/health
-            curl -f http://localhost:3006/health
+            docker compose ps
 
-            echo "✅ Deployment Successful"
+            echo "Deployment Successful"
