@@ -25,18 +25,9 @@ const limiter = rateLimit({
   message: "Too many requests from this IP, please try again later.",
 });
 
-// CORS Configuration
+// CORS Configuration - Temporary: Allow all origins for debugging
 const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:8080",
-    "http://localhost:8081",
-    "https://mood-lift-support.vercel.app",
-    "https://moodlift.vercel.app",
-    "https://moodlift.netlify.app",
-    process.env.FRONTEND_URL,
-  ].filter(Boolean),
-  credentials: true,
+  origin: "*",
   optionsSuccessStatus: 200,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -66,6 +57,10 @@ app.use("/api/v1/users", userRoute);
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/listeners", listenerRoute);
 app.use("/api/v1/mood", moodRoute);
+
+// Admin routes (alias to existing routes for backward compatibility)
+app.use("/api/v1/admin/users", userRoute);
+app.use("/api/v1/admin/listeners", listenerRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -123,7 +118,7 @@ app.use("*", (req, res) => {
 
 // Start server
 const MONGODB_URI =
-  process.env["MONGODB_URI"] || "mongodb://127.0.0.1:27017/moodlift";
+  process.env["MONGODB_URI"] || "mongodb://mongo:27017/moodlift";
 
 mongoose
   .connect(MONGODB_URI, {
@@ -132,17 +127,17 @@ mongoose
     w: "majority",
   })
   .then(() => {
-    console.log("✅ Connected to MongoDB Atlas");
+    console.log("✅ Connected to MongoDB");
     app.listen(PORT, () => {
       console.log(`🚀 User Service running on port ${PORT}`);
       console.log(
         `📊 Environment: ${process.env["NODE_ENV"] || "development"}`
       );
-      console.log(`🔗 API URL: http://localhost:${PORT}/api`);
+      console.log("🔗 API base path: /api");
     });
   })
   .catch((err) => {
-    console.error("❌ MongoDB connection error:", err.message);
+    console.error("❌ MongoDB connectiossssssn error:", err.message);
     process.exit(1);
   });
 

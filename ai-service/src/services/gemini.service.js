@@ -1,8 +1,40 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
 const GEMINI_API_KEY =
-  process.env.GEMINI_API_KEY || "AIzaSyB_LIvzrPM9f1AbHckCKp6R3Fp1cPyNsXc";
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  process.env.GEMINI_API_KEY || "AIzaSyDbu6qbwNyNfWmPiO2avj3hWg11a-GWcCc";
+
+const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1/models";
+const MODEL_NAME = "gemini-1.5-flash";
+
+// Helper function to call Gemini API directly
+async function callGeminiAPI(prompt) {
+  const url = `${GEMINI_API_BASE}/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Gemini API error: ${response.status} - ${error}`);
+  }
+
+  const data = await response.json();
+  return data.candidates[0].content.parts[0].text;
+}
 
 // System prompt for mental health support
 const SYSTEM_PROMPT = `You are MoodLift AI, a compassionate and empathetic mental health support assistant. Your role is to:
@@ -28,8 +60,6 @@ export const geminiService = {
   // Chat with Gemini AI
   async chat(userMessage, conversationHistory = []) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
       // Build conversation context
       const context = conversationHistory
         .map(
@@ -40,14 +70,12 @@ export const geminiService = {
 
       const fullPrompt = `${SYSTEM_PROMPT}\n\nConversation History:\n${context}\n\nUser: ${userMessage}\n\nAssistant:`;
 
-      const result = await model.generateContent(fullPrompt);
-      const response = await result.response;
-      const text = response.text();
+      const text = await callGeminiAPI(fullPrompt);
 
       return {
         success: true,
         response: text,
-        model: "gemini-1.5-flash",
+        model: MODEL_NAME,
       };
     } catch (error) {
       console.error("Gemini API error:", error);
@@ -58,8 +86,6 @@ export const geminiService = {
   // Analyze mood from text
   async analyzeMood(text) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
       const prompt = `Analyze the emotional tone and mood of the following text. Provide:
 1. Primary emotion (happy, sad, anxious, angry, neutral, etc.)
 2. Intensity (1-10 scale)
@@ -76,9 +102,7 @@ Respond in JSON format:
   "supportiveResponse": "brief encouraging message"
 }`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text_response = response.text();
+      const text_response = await callGeminiAPI(prompt);
 
       // Extract JSON from response
       const jsonMatch = text_response.match(/\{[\s\S]*\}/);
@@ -103,8 +127,6 @@ Respond in JSON format:
   // Generate personalized coping strategies
   async generateCopingStrategies(mood, concerns) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
       const prompt = `Based on the user's current mood (${mood}) and concerns (${concerns.join(
         ", "
       )}), generate 5 personalized coping strategies. 
@@ -127,9 +149,7 @@ Respond in JSON format:
   ]
 }`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const text = await callGeminiAPI(prompt);
 
       // Extract JSON from response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -154,8 +174,6 @@ Respond in JSON format:
   // Generate journal prompts
   async generateJournalPrompts(mood, preferences = []) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
       const prompt = `Generate 5 thoughtful journaling prompts for someone feeling ${mood}. 
 Preferences: ${preferences.join(", ") || "general well-being"}
 
@@ -175,9 +193,7 @@ Respond in JSON format:
   ]
 }`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const text = await callGeminiAPI(prompt);
 
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -201,8 +217,6 @@ Respond in JSON format:
   // Crisis detection
   async detectCrisis(text) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
       const prompt = `Analyze if the following text contains signs of a mental health crisis (suicide ideation, self-harm, immediate danger, severe distress).
 
 Text: "${text}"
@@ -216,9 +230,7 @@ Respond in JSON format:
   "resources": ["crisis hotline", "emergency services", etc.]
 }`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text_response = response.text();
+      const text_response = await callGeminiAPI(prompt);
 
       const jsonMatch = text_response.match(/\{[\s\S]*\}/);
       if (jsonMatch) {

@@ -4,8 +4,8 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon --watch 'src/**/*.js' --exec 'node' src/index.js",
-    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify --external:express --external:cors --external:helmet --external:morgan --external:compression --external:express-rate-limit --external:dotenv --external:mongoose --external:uuid --external:mongodb",
+    "dev": "nodemon --watch src/**/*.js --exec node src/index.js",
+    "build": "npx esbuild src/index.js --bundle --platform=node --outfile=dist/index.cjs --format=cjs --minify --external:express --external:cors --external:helmet --external:morgan --external:compression --external:express-rate-limit --external:dotenv --external:mongoose --external:uuid --external:mongodb --external:@google/generative-ai",
     "clean": "node -e \"const fs = require('fs'); if (fs.existsSync('dist')) fs.rmSync('dist', { recursive: true, force: true });\"",
     "start": "node dist/index.cjs",
     "start:dev": "node src/index.js",
@@ -20,6 +20,7 @@
     "nodemon": "^3.0.2"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -29,6 +30,7 @@
     "mongo": "^0.1.0",
     "mongodb": "^6.19.0",
     "mongoose": "^8.6.1",
+    "morgan": "^1.10.0",
     "uuid": "^11.1.0"
   }
 }
