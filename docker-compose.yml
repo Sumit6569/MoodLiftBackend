@@ -1,0 +1,212 @@
+version: "3.8"
+
+services:
+  # ──────────────────────────────────────────────
+  # MongoDB Database
+  # ──────────────────────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: moodlift-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: moodlift
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - moodlift-network
+
+  # ──────────────────────────────────────────────
+  # API Gateway (port 3000)
+  # ──────────────────────────────────────────────
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: moodlift-gateway
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - USER_SERVICE_URL=http://user-service:3001
+      - SESSION_SERVICE_URL=http://session-service:3002
+      - CHAT_SERVICE_URL=http://chat-service:3003
+      - PAYMENT_SERVICE_URL=http://payment-service:3004
+      - AI_SERVICE_URL=http://ai-service:3005
+      - FEEDBACK_SERVICE_URL=http://feedback-service:3006
+    depends_on:
+      user-service:
+        condition: service_started
+      session-service:
+        condition: service_started
+      chat-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+      ai-service:
+        condition: service_started
+      feedback-service:
+        condition: service_started
+    networks:
+      - moodlift-network
+
+  # ──────────────────────────────────────────────
+  # User Service (port 3001)
+  # ──────────────────────────────────────────────
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: moodlift-user-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - USER_SERVICE_PORT=3001
+      - MONGODB_URI=mongodb://mongodb:27017/moodlift
+      - MONGODB_DB=moodlift
+      - JWT_SECRET=${JWT_SECRET:-SECRET_KEY}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - moodlift-network
+
+  # ──────────────────────────────────────────────
+  # Session Service (port 3002)
+  # ──────────────────────────────────────────────
+  session-service:
+    build:
+      context: ./session-service
+      dockerfile: Dockerfile
+    container_name: moodlift-session-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - MONGODB_URI=mongodb://mongodb:27017/moodlift
+      - MONGODB_DB=moodlift
+      - USER_SERVICE_URL=http://user-service:3001
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - moodlift-network
+
+  # ──────────────────────────────────────────────
+  # Chat Service (port 3003)
+  # ──────────────────────────────────────────────
+  chat-service:
+    build:
+      context: ./chat-service
+      dockerfile: Dockerfile
+    container_name: moodlift-chat-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - MONGODB_URI=mongodb://mongodb:27017/moodlift
+      - MONGODB_DB=moodlift
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - moodlift-network
+
+  # ──────────────────────────────────────────────
+  # Payment Service (port 3004)
+  # ──────────────────────────────────────────────
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: moodlift-payment-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+      - PORT=3004
+      - MONGODB_URI=mongodb://mongodb:27017/moodlift
+      - MONGODB_DB=moodlift
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID:-}
+      - PAYPAL_CLIENT_SECRET=${PAYPAL_CLIENT_SECRET:-}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - moodlift-network
+
+  # ──────────────────────────────────────────────
+  # AI Service (port 3005)
+  # ──────────────────────────────────────────────
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: moodlift-ai-service
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=development
+      - PORT=3005
+      - MONGODB_URI=mongodb://mongodb:27017/moodlift
+      - MONGODB_DB=moodlift
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - moodlift-network
+
+  # ──────────────────────────────────────────────
+  # Feedback Service (port 3006)
+  # ──────────────────────────────────────────────
+  feedback-service:
+    build:
+      context: ./feedback-service
+      dockerfile: Dockerfile
+    container_name: moodlift-feedback-service
+    restart: unless-stopped
+    ports:
+      - "3006:3006"
+    environment:
+      - NODE_ENV=development
+      - PORT=3006
+      - MONGODB_URI=mongodb://mongodb:27017/moodlift
+      - MONGODB_DB=moodlift
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - moodlift-network
+
+# ──────────────────────────────────────────────
+# Volumes & Networks
+# ──────────────────────────────────────────────
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  moodlift-network:
+    driver: bridge

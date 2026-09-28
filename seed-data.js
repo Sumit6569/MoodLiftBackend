@@ -114,6 +114,12 @@ const sampleUsers = [
     passwordHash: await bcrypt.hash("password123", 10),
     role: "listener",
     freeSessionsUsed: 0,
+    isApproved: true,
+    isVerified: true,
+    isEmailVerified: true,
+    bio: "Licensed clinical psychologist with 10+ years of experience in cognitive behavioral therapy. Passionate about helping individuals overcome anxiety and depression.",
+    expertise: ["Anxiety", "Depression", "CBT", "Stress Management"],
+    hourlyRate: 75,
     createdAt: new Date("2024-01-10")
   },
   {
@@ -123,6 +129,12 @@ const sampleUsers = [
     passwordHash: await bcrypt.hash("password123", 10),
     role: "listener",
     freeSessionsUsed: 0,
+    isApproved: true,
+    isVerified: true,
+    isEmailVerified: true,
+    bio: "Experienced counselor specializing in relationship issues, grief counseling, and emotional wellness. Warm, empathetic approach to mental health support.",
+    expertise: ["Relationships", "Grief Counseling", "Emotional Wellness", "Mindfulness"],
+    hourlyRate: 60,
     createdAt: new Date("2024-01-12")
   },
   {
@@ -132,6 +144,12 @@ const sampleUsers = [
     passwordHash: await bcrypt.hash("password123", 10),
     role: "listener",
     freeSessionsUsed: 0,
+    isApproved: true,
+    isVerified: true,
+    isEmailVerified: true,
+    bio: "Specialized in trauma recovery and PTSD treatment. Uses evidence-based approaches including EMDR and mindfulness-based stress reduction.",
+    expertise: ["Trauma Recovery", "PTSD", "EMDR", "Sleep Disorders", "Self-Care"],
+    hourlyRate: 85,
     createdAt: new Date("2024-01-18")
   }
 ];

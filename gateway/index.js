@@ -4,6 +4,14 @@ import jwt from "jsonwebtoken";
 
 const app = express();
 
+// Service URLs (configurable for Docker)
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://localhost:3001";
+const SESSION_SERVICE_URL = process.env.SESSION_SERVICE_URL || "http://localhost:3002";
+const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || "http://localhost:3003";
+const PAYMENT_SERVICE_URL = process.env.PAYMENT_SERVICE_URL || "http://localhost:3004";
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:3005";
+const FEEDBACK_SERVICE_URL = process.env.FEEDBACK_SERVICE_URL || "http://localhost:3006";
+
 // Request logging middleware (first)
 app.use((req, res, next) => {
   console.log(`📨 ${new Date().toISOString()} - ${req.method} ${req.url}`);
@@ -104,7 +112,7 @@ app.get("/test", (req, res) => {
 // User service routes (auth, users, listeners) - use localhost for local development
 app.use(
   "/auth",
-  proxy("http://localhost:3001", {
+  proxy(USER_SERVICE_URL, {
     proxyReqPathResolver: (req) => {
       console.log(
         `🔗 Proxying auth request: ${req.url} -> /api/v1/auth${req.url}`
@@ -115,13 +123,13 @@ app.use(
 );
 app.use(
   "/users",
-  proxy("http://localhost:3001", {
+  proxy(USER_SERVICE_URL, {
     proxyReqPathResolver: (req) => `/api/v1/users${req.url}`,
   })
 );
 app.use(
   "/listeners",
-  proxy("http://localhost:3001", {
+  proxy(USER_SERVICE_URL, {
     proxyReqPathResolver: (req) => `/api/v1/listeners${req.url}`,
   })
 );
@@ -129,7 +137,7 @@ app.use(
 // Other service routes - use localhost for local development
 app.use(
   "/sessions",
-  proxy("http://localhost:3002", {
+  proxy(SESSION_SERVICE_URL, {
     proxyReqPathResolver: (req) => {
       console.log(
         `🔗 Proxying session request: ${req.url} -> /api/sessions${req.url}`
@@ -138,8 +146,8 @@ app.use(
     },
   })
 );
-app.use("/chat", proxy("http://localhost:3003"));
-app.use("/payment", proxy("http://localhost:3004"));
-app.use("/ai", proxy("http://localhost:3005"));
-app.use("/feedback", proxy("http://localhost:3006"));
+app.use("/chat", proxy(CHAT_SERVICE_URL));
+app.use("/payment", proxy(PAYMENT_SERVICE_URL));
+app.use("/ai", proxy(AI_SERVICE_URL));
+app.use("/feedback", proxy(FEEDBACK_SERVICE_URL));
 app.listen(3000, () => console.log("🚀 API Gateway running on 3000"));
